@@ -26,6 +26,7 @@ import type { Event } from 'nostr-tools'
 import { useEffect, useMemo } from 'react'
 import { orderKeys } from './queryKeyFactory'
 import { getCoordsFromATag, isValidATag } from '@/lib/utils/coords'
+import { resolveBuyerOrderStatus, resolveBuyerShippingStatus } from '@sdk/commerce/orders'
 
 export type OrderWithRelatedEvents = {
 	order: NDKEvent // The original order creation event (kind 16, type 1)
@@ -1078,14 +1079,7 @@ export const getOrderStatus = (order: OrderWithRelatedEvents): OrderStatus => {
 	// from latest event (at index 0) to oldest event (at index N - 1). Similarly, we assume `latestStatus` references the latest
 	// status event (at index 0) from this list.
 
-	const status = order.latestStatus?.tags.find((tag) => tag[0] === 'status')?.at(1)
-
-	if (status && Object.values(ORDER_STATUS).includes(status as any)) {
-		return status as OrderStatus
-	}
-
-	// Default to pending if no other status is found
-	return ORDER_STATUS.PENDING
+	return resolveBuyerOrderStatus(order.latestStatus?.tags) as OrderStatus
 }
 
 export const getShippingStatus = (order: OrderWithRelatedEvents): ShippingStatus | null => {
@@ -1093,13 +1087,7 @@ export const getShippingStatus = (order: OrderWithRelatedEvents): ShippingStatus
 	// from latest event (at index 0) to oldest event (at index N - 1). Similarly, we assume `latestShipping` references the latest
 	// shipping event (at index 0) from this list.
 
-	const shipping = order.latestShipping?.tags.find((tag) => tag[0] === 'status')?.at(1)
-
-	if (shipping && Object.values(SHIPPING_STATUS).includes(shipping as any)) {
-		return shipping as ShippingStatus
-	}
-
-	return null
+	return resolveBuyerShippingStatus(order.latestShipping?.tags) as ShippingStatus | null
 }
 
 /**

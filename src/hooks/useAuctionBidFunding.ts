@@ -954,7 +954,7 @@ export function useAuctionBidFunding({
 		lockOutcomeUncertainRecoveryRecordId,
 		// #1235 round-3 fix 5 (felixfelix #11): null = no uncertain leg this
 		// session; false = record-only leg (no durable pending token — the UI
-		// copy must not promise a wallet reclaim); true = reclaim-after-timelock
+		// copy must not promise a wallet reclaim); true = the reclaim-after-timelock
 		// guidance is honest. Additive to the return shape.
 		lockOutcomeUncertainPendingTokenPersisted,
 	}

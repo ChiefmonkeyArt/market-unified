@@ -12,6 +12,7 @@ import {
 	resolveCheckoutDeliveryRequirements,
 	type CheckoutDeliveryRequirements,
 } from '@sdk/commerce/checkout'
+import { createBuyerOrderTemplate, createBuyerPaymentRequestTemplate } from '@sdk/commerce/orders'
 import { createEncryptedPrivateOrderMessageWithSigner, type PrivateOrderDeliveryDetails } from '@/lib/orders/privateOrderMessage'
 import { fetchProfileByIdentifier } from '@/queries/profiles'
 import { getShippingEvent, getShippingService } from '@/queries/shipping'
@@ -449,34 +450,21 @@ async function createOrderCreationEventWithOrderId(data: OrderCreationData, orde
 	if (!ndk) throw new Error('NDK not initialized')
 
 	const now = Math.floor(Date.now() / 1000)
-
-	// Build tags according to spec
-	const tags: NDKTag[] = [
-		// Required tags
-		['p', data.merchantPubkey],
-		['subject', 'order-info'],
-		['type', ORDER_MESSAGE_TYPE.ORDER_CREATION],
-		['order', orderId],
-		['amount', data.totalAmountSats.toString()],
-	]
-
-	// Add item tags
-	data.orderItems.forEach((item) => {
-		tags.push(['item', item.productRef, item.quantity.toString()])
+	const template = createBuyerOrderTemplate({
+		merchantPubkey: data.merchantPubkey,
+		orderId,
+		amountSats: data.totalAmountSats,
+		items: data.orderItems,
+		shippingRef: getPublicSellerShippingRef(data.shippingRef),
+		createdAt: now,
 	})
-
-	// Optional tags
-	const shippingRef = getPublicSellerShippingRef(data.shippingRef)
-	if (shippingRef) {
-		tags.push(['shipping', shippingRef])
-	}
 
 	// Create the event
 	const event = new NDKEvent(ndk)
-	event.kind = ORDER_PROCESS_KIND
-	event.created_at = now
-	event.content = 'Order created'
-	event.tags = tags
+	event.kind = template.kind as typeof ORDER_PROCESS_KIND
+	event.created_at = template.created_at
+	event.content = template.content
+	event.tags = template.tags as NDKTag[]
 
 	// Sign the event
 	await event.sign()
@@ -493,34 +481,23 @@ export async function createPaymentRequestEvent(data: PaymentRequestData): Promi
 	if (!ndk) throw new Error('NDK not initialized')
 
 	const now = Math.floor(Date.now() / 1000)
-
-	// Build tags according to spec
-	const tags: NDKTag[] = [
-		// Required tags
-		['p', data.buyerPubkey],
-		['recipient', data.merchantPubkey],
-		['subject', 'order-payment'],
-		['type', ORDER_MESSAGE_TYPE.PAYMENT_REQUEST],
-		['order', data.orderId],
-		['amount', data.amountSats.toString()],
-	]
-
-	// Add payment method tags
-	data.paymentMethods.forEach((method) => {
-		tags.push(['payment', method.type, method.details])
+	const template = createBuyerPaymentRequestTemplate({
+		buyerPubkey: data.buyerPubkey,
+		merchantPubkey: data.merchantPubkey,
+		orderId: data.orderId,
+		amountSats: data.amountSats,
+		paymentMethods: data.paymentMethods,
+		expirationTime: data.expirationTime,
+		createdAt: now,
+		content: data.notes,
 	})
-
-	// Optional expiration
-	if (data.expirationTime) {
-		tags.push(['expiration', data.expirationTime.toString()])
-	}
 
 	// Create the event
 	const event = new NDKEvent(ndk)
-	event.kind = ORDER_PROCESS_KIND
-	event.created_at = now
-	event.content = data.notes || 'Payment request for your order'
-	event.tags = tags
+	event.kind = template.kind as typeof ORDER_PROCESS_KIND
+	event.created_at = template.created_at
+	event.content = template.content
+	event.tags = template.tags as NDKTag[]
 
 	// Sign the event
 	await event.sign()

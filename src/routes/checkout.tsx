@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
 	isValidDigitalDeliveryContact,
+	findNextActionableInvoiceIndex,
+	isCheckoutInvoiceComplete,
 	resolveCheckoutDeliveryRequirements,
 	type CheckoutDeliveryRequirements,
 } from '@sdk/commerce/checkout'
@@ -266,9 +268,7 @@ function RouteComponent() {
 		return 2 + invoiceStepCount + 1
 	}, [invoiceStepCount])
 
-	const isInvoiceCompleteForFlow = (invoice: PaymentInvoiceData) => {
-		return invoice.status === 'paid' || invoice.status === 'skipped' || invoice.status === 'expired'
-	}
+	const isInvoiceCompleteForFlow = isCheckoutInvoiceComplete
 
 	// Ensure currentInvoiceIndex stays within bounds
 	const safeInvoiceIndex = useMemo(() => {
@@ -525,21 +525,7 @@ function RouteComponent() {
 		},
 	})
 
-	const findNextPendingInvoiceIndex = (list: PaymentInvoiceData[], fromIndex: number) => {
-		for (let i = fromIndex + 1; i < list.length; i++) {
-			if (list[i].status === 'pending' || list[i].status === 'failed') {
-				return i
-			}
-		}
-
-		for (let i = 0; i <= fromIndex; i++) {
-			if (list[i].status === 'pending' || list[i].status === 'failed') {
-				return i
-			}
-		}
-
-		return -1
-	}
+	const findNextPendingInvoiceIndex = findNextActionableInvoiceIndex
 
 	const updateInvoiceStatus = (invoiceId: string, changes: Partial<PaymentInvoiceData>, options?: { skipAutoAdvance?: boolean }) => {
 		let nextPendingIndex: number | null = null
