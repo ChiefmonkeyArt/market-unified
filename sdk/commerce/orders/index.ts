@@ -26,3 +26,10 @@ export type {
 	OrderWorkflowStatus,
 	ShippingWorkflowStatus,
 } from './orderEvents'
+export type {
+	OrderWorkflowCapabilities,
+	OrderWorkflowSnapshot,
+	SellerOrderPublishOutcome,
+	SellerOrderPublishPhase,
+	SellerOrderPublishProgress,
+} from './workflowContracts'

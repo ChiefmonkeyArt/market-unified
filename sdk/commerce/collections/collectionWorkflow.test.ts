@@ -1,10 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import {
-	buildCollectionEventData,
-	addProductToCollectionSelection,
-	createCollectionEditDraft,
-	removeProductFromCollectionSelection,
-} from './collectionWorkflow'
+import { addProductToCollectionSelection, createCollectionEditDraft, removeProductFromCollectionSelection } from './collectionWorkflow'
+import { buildCollectionEventData } from './collectionEvent'
 
 describe('seller collection workflow', () => {
 	test('builds the existing collection event tag layout from form data', () => {

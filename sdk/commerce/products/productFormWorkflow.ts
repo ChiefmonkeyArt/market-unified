@@ -18,10 +18,7 @@ function isValidNumberString(value: string): boolean {
 }
 
 /** Preserve current seller product form validation rules and messages. */
-export function getSellerProductTabValidationIssues(
-	state: SellerProductFormValidationState,
-	tab: SellerProductFormTab,
-): string[] {
+export function getSellerProductTabValidationIssues(state: SellerProductFormValidationState, tab: SellerProductFormTab): string[] {
 	switch (tab) {
 		case 'name': {
 			const issues: string[] = []
@@ -63,10 +60,7 @@ export function getFirstBlockingSellerProductTab(
 	return null
 }
 
-export function getAdjacentSellerProductTab(
-	currentTab: SellerProductFormTab,
-	direction: 'next' | 'previous',
-): SellerProductFormTab | null {
+export function getAdjacentSellerProductTab(currentTab: SellerProductFormTab, direction: 'next' | 'previous'): SellerProductFormTab | null {
 	const currentIndex = SELLER_PRODUCT_FORM_TAB_ORDER.indexOf(currentTab)
 	const offset = direction === 'next' ? 1 : -1
 	return SELLER_PRODUCT_FORM_TAB_ORDER[currentIndex + offset] ?? null

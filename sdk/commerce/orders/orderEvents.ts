@@ -199,7 +199,10 @@ export function createGeneralOrderCommunicationTemplate(input: GeneralOrderCommu
 		kind: 14,
 		created_at: input.createdAt,
 		content: input.content,
-		tags: [['p', input.recipientPubkey], ['subject', input.subject]],
+		tags: [
+			['p', input.recipientPubkey],
+			['subject', input.subject],
+		],
 	}
 }
 

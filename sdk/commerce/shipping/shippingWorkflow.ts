@@ -31,10 +31,7 @@ export type ShippingFormValidationErrors = Partial<
 >
 
 /** Pure UI validation, including explicit worldwide and pickup/digital rules. */
-export function validateShippingForm(
-	form: ShippingOptionFormInput,
-	options: { isWorldwide: boolean },
-): ShippingFormValidationErrors {
+export function validateShippingForm(form: ShippingOptionFormInput, options: { isWorldwide: boolean }): ShippingFormValidationErrors {
 	const errors: ShippingFormValidationErrors = {}
 	if (!form.title.trim()) errors.title = 'Title is required'
 	if (!form.description.trim()) errors.description = 'Description is required'
@@ -64,9 +61,7 @@ export type ShippingPublishValidationIssue =
 	| 'shipping-pickup-street-required'
 	| 'shipping-pickup-city-required'
 
-export type ShippingPublishPreparation =
-	| { ok: true; form: ShippingOptionFormInput }
-	| { ok: false; issue: ShippingPublishValidationIssue }
+export type ShippingPublishPreparation = { ok: true; form: ShippingOptionFormInput } | { ok: false; issue: ShippingPublishValidationIssue }
 
 /** Validate and normalize a copy for publishing; never mutate caller-owned form state. */
 export function prepareShippingOptionForPublish(form: ShippingOptionFormInput): ShippingPublishPreparation {
@@ -133,7 +128,8 @@ export function buildShippingOptionEventData(form: ShippingOptionFormInput, ship
 	if (form.dimensionLimits?.max) tags.push(['dim-max', form.dimensionLimits.max.value, form.dimensionLimits.max.unit])
 	if (form.priceCalculations?.weight) tags.push(['price-weight', form.priceCalculations.weight.value, form.priceCalculations.weight.unit])
 	if (form.priceCalculations?.volume) tags.push(['price-volume', form.priceCalculations.volume.value, form.priceCalculations.volume.unit])
-	if (form.priceCalculations?.distance) tags.push(['price-distance', form.priceCalculations.distance.value, form.priceCalculations.distance.unit])
+	if (form.priceCalculations?.distance)
+		tags.push(['price-distance', form.priceCalculations.distance.value, form.priceCalculations.distance.unit])
 
 	return { kind: SHIPPING_OPTION_KIND, content: form.description, tags }
 }

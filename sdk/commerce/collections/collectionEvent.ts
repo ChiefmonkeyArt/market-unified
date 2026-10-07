@@ -24,11 +24,7 @@ export interface CollectionEventData {
 
 /** Build the current kind-30405 event data. Signing and publishing stay in Platform. */
 export function buildCollectionEventData(input: CollectionEventInput): CollectionEventData {
-	const tags: string[][] = [
-		['d', input.collectionId],
-		['title', input.name],
-		...(input.summary ? [['summary', input.summary]] : []),
-	]
+	const tags: string[][] = [['d', input.collectionId], ['title', input.name], ...(input.summary ? [['summary', input.summary]] : [])]
 
 	if (input.headerImageUrl) tags.push(['image', input.headerImageUrl])
 	for (const productCoordinate of input.products) tags.push(['a', productCoordinate])
@@ -36,9 +32,7 @@ export function buildCollectionEventData(input: CollectionEventInput): Collectio
 	const shippingTags = input.shippings
 		.filter((shipping) => shipping.shipping && shipping.shipping.id)
 		.map((shipping) =>
-			shipping.extraCost
-				? ['shipping_option', shipping.shipping!.id, shipping.extraCost]
-				: ['shipping_option', shipping.shipping!.id],
+			shipping.extraCost ? ['shipping_option', shipping.shipping!.id, shipping.extraCost] : ['shipping_option', shipping.shipping!.id],
 		)
 	tags.push(...shippingTags)
 

@@ -137,7 +137,10 @@ describe('buyer order event templates', () => {
 			kind: 14,
 			created_at: 106,
 			content: 'Message',
-			tags: [['p', 'b'.repeat(64)], ['subject', '']],
+			tags: [
+				['p', 'b'.repeat(64)],
+				['subject', ''],
+			],
 		})
 		const receipt = createOrderPaymentReceiptTemplate({
 			merchantPubkey: 'b'.repeat(64),

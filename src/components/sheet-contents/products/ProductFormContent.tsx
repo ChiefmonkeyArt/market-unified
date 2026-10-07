@@ -70,14 +70,11 @@ export function ProductFormContent({
 					tab,
 					getSellerProductTabValidationIssues(formState, tab),
 				]),
-			) as Record<
-				ProductFormTab,
-				string[]
-			>,
+			) as Record<ProductFormTab, string[]>,
 		[formState],
 	)
 	const currentTabValidationIssues = validationIssuesByTab[activeTab]
-		const formValidationIssues = useMemo(() => getSellerProductFormValidationIssues(formState), [formState])
+	const formValidationIssues = useMemo(() => getSellerProductFormValidationIssues(formState), [formState])
 
 	// Check for persisted draft on mount (for drafts from previous sessions)
 	const checkForPersistedDraft = useCallback(async () => {

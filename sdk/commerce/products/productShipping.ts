@@ -105,9 +105,10 @@ export const findReusablePublishedShippingSelection = ({
 }
 
 export const normalizeProductShippingSelection = (input: ProductShippingSelectionInput): ProductShippingSelection | null => {
+	const legacyShipping = 'shipping' in input ? input.shipping : undefined
 	const shippingRef =
 		(typeof input.shippingRef === 'string' && input.shippingRef.trim()) ||
-		(typeof input.shipping?.id === 'string' && input.shipping.id.trim()) ||
+		(typeof legacyShipping?.id === 'string' && legacyShipping.id.trim()) ||
 		''
 
 	if (!shippingRef) return null

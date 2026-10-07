@@ -22,7 +22,12 @@ describe('seller shipping workflow', () => {
 			countries: 'At least one country is required',
 		})
 		expect(validateShippingForm({ ...baseForm, service: 'digital', price: '', currency: '' }, { isWorldwide: false })).toEqual({})
-		expect(validateShippingForm({ ...baseForm, service: 'pickup', countries: [], pickupAddress: { street: '', city: '', state: '', postalCode: '', country: '' } }, { isWorldwide: false })).toEqual({
+		expect(
+			validateShippingForm(
+				{ ...baseForm, service: 'pickup', countries: [], pickupAddress: { street: '', city: '', state: '', postalCode: '', country: '' } },
+				{ isWorldwide: false },
+			),
+		).toEqual({
 			pickupStreet: 'Street address is required for local pickup',
 			pickupCity: 'City is required for local pickup',
 		})
@@ -43,17 +48,74 @@ describe('seller shipping workflow', () => {
 		expect(pickup).toEqual({ ok: true, form: { ...pickupForm, price: '0' } })
 	})
 
+	test('builds all optional shipping tags without changing their established ordering', () => {
+		const result = buildShippingOptionEventData(
+			{
+				...baseForm,
+				countries: ['USA', 'CAN'],
+				carrier: 'Carrier',
+				region: 'US-CA',
+				additionalRegions: ['US-NY'],
+				duration: { min: '1', max: '3', unit: 'D' },
+				location: 'Warehouse',
+				geohash: '9q8yy',
+				pickupAddress: { street: 'Main', city: 'Town', state: 'CA', postalCode: '90000', country: 'USA' },
+				weightLimits: { min: { value: '1', unit: 'kg' }, max: { value: '5', unit: 'kg' } },
+				dimensionLimits: { min: { value: '1x2x3', unit: 'cm' }, max: { value: '4x5x6', unit: 'cm' } },
+				priceCalculations: {
+					weight: { value: '2', unit: 'kg' },
+					volume: { value: '3', unit: 'm3' },
+					distance: { value: '4', unit: 'km' },
+				},
+			},
+			'ship-all',
+		)
+		expect(result.tags).toEqual([
+			['d', 'ship-all'],
+			['title', 'Standard'],
+			['price', '5', 'USD'],
+			['service', 'standard'],
+			['country', 'USA', 'CAN'],
+			['carrier', 'Carrier'],
+			['region', 'US-CA', 'US-NY'],
+			['duration', '1', '3', 'D'],
+			['location', 'Warehouse'],
+			['g', '9q8yy'],
+			['pickup-street', 'Main'],
+			['pickup-city', 'Town'],
+			['pickup-state', 'CA'],
+			['pickup-postal-code', '90000'],
+			['pickup-country', 'USA'],
+			['pickup-address', 'Main, Town, CA, 90000, USA'],
+			['weight-min', '1', 'kg'],
+			['weight-max', '5', 'kg'],
+			['dim-min', '1x2x3', 'cm'],
+			['dim-max', '4x5x6', 'cm'],
+			['price-weight', '2', 'kg'],
+			['price-volume', '3', 'm3'],
+			['price-distance', '4', 'km'],
+		])
+	})
+
 	test('builds kind-30406 shipping tags with worldwide and pickup compatibility behavior', () => {
 		expect(buildShippingOptionEventData({ ...baseForm, countries: [] }, 'ship-1')).toEqual({
 			kind: 30406,
 			content: 'Usually arrives soon',
-			tags: [['d', 'ship-1'], ['title', 'Standard'], ['price', '5', 'USD'], ['service', 'standard']],
+			tags: [
+				['d', 'ship-1'],
+				['title', 'Standard'],
+				['price', '5', 'USD'],
+				['service', 'standard'],
+			],
 		})
-		const pickup = buildShippingOptionEventData({
-			...baseForm,
-			service: 'pickup',
-			pickupAddress: { street: 'Main', city: 'Town', state: 'CA', postalCode: '90000', country: 'USA' },
-		}, 'pickup-1')
+		const pickup = buildShippingOptionEventData(
+			{
+				...baseForm,
+				service: 'pickup',
+				pickupAddress: { street: 'Main', city: 'Town', state: 'CA', postalCode: '90000', country: 'USA' },
+			},
+			'pickup-1',
+		)
 		expect(pickup.tags).toContainEqual(['country', 'USA'])
 		expect(pickup.tags).toContainEqual(['pickup-address', 'Main, Town, CA, 90000, USA'])
 	})
