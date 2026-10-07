@@ -9,7 +9,7 @@ import { AUCTION_MIN_DURATION_SECONDS, validateAuctionPublishInput } from '@/lib
 import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@/lib/schemas/order'
 import { configStore } from '@/lib/stores/config'
 import { nip60Actions, type AuctionP2pkKeyScheme, AuctionBidLockMutationPossibleError } from '@/lib/stores/nip60'
-import type { ProductShippingSelectionInput } from '@/lib/utils/productShippingSelections'
+import type { ProductShippingSelectionInput } from '@sdk/commerce/products'
 import { getBidAmount, getBidStatus, markAuctionAsDeleted } from '@/queries/auctions'
 import { isStructurallyValidSettledSettlement } from '@/lib/auction/events'
 import { toRawEvent, type NostrEventLike } from '@/lib/nostr/eventLike'

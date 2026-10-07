@@ -11,8 +11,7 @@ if (typeof window !== 'undefined' && process.env.NODE_ENV === 'test') {
 }
 import { uiActions } from '@/lib/stores/ui'
 import { hasProductFormDraft } from '@/lib/utils/productFormStorage'
-import { resolvePublishPrice } from '@/lib/utils/productPriceResolution'
-import type { ProductWorkflowResolution } from '@/lib/workflow/productWorkflowResolver'
+import { resolvePublishPrice, type ProductWorkflowResolution } from '@sdk/commerce/products'
 import { useForm } from '@tanstack/react-form'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'

@@ -30,7 +30,7 @@ import {
 	normalizePublishedProductShippingTags,
 	resolvePublishedProductShippingOptions,
 	type ProductShippingSelection,
-} from '@/lib/utils/productShippingSelections'
+} from '@sdk/commerce/products'
 import NDK, { NDKEvent, type NDKSigner } from '@nostr-dev-kit/ndk'
 import { QueryClient } from '@tanstack/react-query'
 import { useStore } from '@tanstack/react-store'
