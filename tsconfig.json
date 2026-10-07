@@ -10,7 +10,10 @@
 		"verbatimModuleSyntax": true,
 		"noEmit": true,
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"@sdk/*": ["./sdk/*"],
+			"@ui/*": ["./ui/*"],
+			"@platform/*": ["./platform/*"]
 		}
 	},
 	"include": ["**/*.ts", "**/*.tsx", "scripts/**/*.ts"]

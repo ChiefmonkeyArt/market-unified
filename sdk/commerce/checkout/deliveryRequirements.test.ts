@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { isValidDigitalDeliveryContact, resolveCheckoutDeliveryRequirements } from '@/lib/checkout/deliveryRequirements'
+import { isValidDigitalDeliveryContact, resolveCheckoutDeliveryRequirements } from './deliveryRequirements'
 
 const product = (id: string, shippingMethodId?: string | null) => ({ id, shippingMethodId })
 
@@ -148,11 +148,8 @@ describe('resolveCheckoutDeliveryRequirements', () => {
 })
 
 describe('isValidDigitalDeliveryContact', () => {
-	test('accepts valid email contact for v1', () => {
+	test('accepts valid email contact and rejects empty or invalid contact', () => {
 		expect(isValidDigitalDeliveryContact('buyer@example.com')).toBe(true)
-	})
-
-	test('rejects empty or invalid contact', () => {
 		expect(isValidDigitalDeliveryContact('')).toBe(false)
 		expect(isValidDigitalDeliveryContact('not-an-email')).toBe(false)
 	})

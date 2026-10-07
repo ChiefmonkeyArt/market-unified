@@ -13,7 +13,7 @@ import {
 	isValidDigitalDeliveryContact,
 	resolveCheckoutDeliveryRequirements,
 	type CheckoutDeliveryRequirements,
-} from '@/lib/checkout/deliveryRequirements'
+} from '@sdk/commerce/checkout'
 import { authStore } from '@/lib/stores/auth'
 import { cartActions, cartStore } from '@/lib/stores/cart'
 import { ndkStore } from '@/lib/stores/ndk'
