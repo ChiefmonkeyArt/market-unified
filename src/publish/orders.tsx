@@ -18,6 +18,12 @@ import {
 	createGeneralOrderCommunicationTemplate,
 	createOrderPaymentReceiptTemplate,
 	createOrderStatusUpdateTemplate,
+	createSellerOrderPublishFailure,
+	executeSellerOrderPublishWorkflow,
+	planSellerOrders,
+	type SellerOrderPublishOutcome,
+	type SellerOrderPublishPhase,
+	type SellerOrderPublishProgress,
 } from '@sdk/commerce/orders'
 import { createEncryptedPrivateOrderMessageWithSigner, type PrivateOrderDeliveryDetails } from '@/lib/orders/privateOrderMessage'
 import { fetchProfileByIdentifier } from '@/queries/profiles'
@@ -794,8 +800,16 @@ async function publishRequiredPrivateGiftWrap(event: NDKEvent): Promise<void> {
  *
  * @returns An array of the created spec-compliant order IDs.
  */
-export async function publishOrderWithDependencies(params: PublishOrderDependenciesParams): Promise<string[]> {
+export async function publishOrderWorkflowWithDependencies(params: PublishOrderDependenciesParams): Promise<SellerOrderPublishOutcome> {
 	const { shippingData, sellers, productsBySeller, sellerData, v4vShares } = params
+	let phase: SellerOrderPublishPhase = 'delivery_preflight'
+	let activeSellerPubkey: string | undefined
+	let activeOrderId: string | undefined
+	let orderIds: string[] = []
+	let progress: SellerOrderPublishProgress[] = []
+	let paymentRequestFailures = 0
+
+	try {
 
 	const ndk = ndkActions.getNDK()
 	const currentUser = ndk?.activeUser
@@ -813,24 +827,13 @@ export async function publishOrderWithDependencies(params: PublishOrderDependenc
 	const preflight: SellerOrderPreflight[] = []
 
 	for (const sellerPubkey of sellers) {
+		activeSellerPubkey = sellerPubkey
 		const sellerProducts = productsBySeller[sellerPubkey] || []
 		const data = sellerData[sellerPubkey]
 
 		if (sellerProducts.length === 0 || !data) continue
 
 		const requirements = await resolveDeliveryRequirementsForProducts(sellerProducts)
-		if (!requirements.isResolved) {
-			throw new Error('Delivery requirements could not be verified for one or more selected shipping options')
-		}
-
-		if (requirements.needsDigitalDeliveryContact && !isValidDigitalDeliveryContact(buyerEmail)) {
-			throw new Error('Digital delivery contact is required before creating the order')
-		}
-
-		if (requirements.needsPhysicalAddress && !hasRequiredPhysicalAddress(shippingData)) {
-			throw new Error('Shipping address is required before creating the order')
-		}
-
 		preflight.push({
 			sellerPubkey,
 			sellerProducts,
@@ -840,30 +843,84 @@ export async function publishOrderWithDependencies(params: PublishOrderDependenc
 		})
 	}
 
-	const signerRequired = preflight.some(({ requirements }) => requiresPrivateBuyerDeliveryDetails(requirements))
+	const planInputs = preflight.map(({ sellerPubkey, sellerProducts, data, requirements, shippingRef }) => ({
+		sellerPubkey,
+		orderId: uuidv4(),
+		amountSats: data.satsTotal,
+		products: sellerProducts.map((product) => ({ productId: product.id, quantity: product.amount })),
+		shippingRef,
+		deliveryRequirements: requirements,
+	}))
+	const planning = planSellerOrders(planInputs)
+	if (planning.status === 'unresolved_delivery') {
+		activeSellerPubkey = planning.failedSellerPubkey
+		activeOrderId = planning.failedOrderId
+		phase = 'delivery_preflight'
+		progress = planInputs.map((item) => ({
+			sellerPubkey: item.sellerPubkey,
+			orderId: item.orderId,
+			completedPhases: [],
+			publishedEventIds: [],
+			paymentRequestFailures: 0,
+		}))
+		return createSellerOrderPublishFailure({
+			orderIds,
+			progress,
+			failedSellerPubkey: planning.failedSellerPubkey,
+			failedOrderId: planning.failedOrderId,
+			failedPhase: phase,
+			error: 'Delivery requirements could not be verified for one or more selected shipping options',
+			paymentRequestFailures,
+			unresolvedShippingRefs: planning.unresolvedShippingRefs,
+		})
+	}
+	const plans = planning.plans
+	progress = plans.map((plan) => ({
+		sellerPubkey: plan.sellerPubkey,
+		orderId: plan.orderId,
+		completedPhases: [],
+		publishedEventIds: [],
+		paymentRequestFailures: 0,
+	}))
+
+	for (const plan of plans) {
+		if (plan.deliveryRequirements.needsDigitalDeliveryContact && !isValidDigitalDeliveryContact(buyerEmail)) {
+			activeSellerPubkey = plan.sellerPubkey
+			activeOrderId = plan.orderId
+			throw new Error('Digital delivery contact is required before creating the order')
+		}
+		if (plan.deliveryRequirements.needsPhysicalAddress && !hasRequiredPhysicalAddress(shippingData)) {
+			activeSellerPubkey = plan.sellerPubkey
+			activeOrderId = plan.orderId
+			throw new Error('Shipping address is required before creating the order')
+		}
+	}
+
+	const signerRequired = plans.some(({ requiresPrivateDelivery }) => requiresPrivateDelivery)
 	const signer = signerRequired ? ndkActions.getSigner() : undefined
 	if (signerRequired && !signer) {
 		throw new Error('Encrypted seller delivery could not be prepared')
 	}
-
 	const preparedOrderData: PreparedSellerOrderData[] = []
 
-	for (const preflightItem of preflight) {
+	for (let index = 0; index < preflight.length; index++) {
+		const preflightItem = preflight[index]!
+		const plan = plans[index]!
 		const { sellerPubkey, sellerProducts, data, requirements, shippingRef } = preflightItem
-		const orderId = uuidv4()
+		activeSellerPubkey = sellerPubkey
+		activeOrderId = plan.orderId
+		phase = 'event_preparation'
+		const orderId = plan.orderId
 		const orderData: OrderCreationData = {
 			merchantPubkey: sellerPubkey,
-			buyerPubkey: buyerPubkey,
-			orderItems: sellerProducts.map((product) => ({
-				productRef: `30402:${sellerPubkey}:${product.id}`,
-				quantity: product.amount,
-			})),
-			totalAmountSats: data.satsTotal,
-			shippingRef: shippingRef || undefined,
+			buyerPubkey,
+			orderItems: plan.items.map((item) => ({ productRef: item.productRef, quantity: item.quantity })),
+			totalAmountSats: plan.amountSats,
+			shippingRef: plan.shippingRef,
 		}
 
 		let privateGiftWrapEvent: NDKEvent | undefined
-		if (requiresPrivateBuyerDeliveryDetails(requirements)) {
+		if (plan.requiresPrivateDelivery) {
 			try {
 				const privateDetails = createPrivateOrderDeliveryDetails({
 					sellerPubkey,
@@ -895,6 +952,9 @@ export async function publishOrderWithDependencies(params: PublishOrderDependenc
 
 	const preparedOrders: PreparedSellerOrderPublishWork[] = []
 	for (const preparedOrder of preparedOrderData) {
+		activeSellerPubkey = preparedOrder.sellerPubkey
+		activeOrderId = preparedOrder.orderId
+		phase = 'event_preparation'
 		const orderEvent = await createOrderCreationEventWithOrderId(preparedOrder.orderData, preparedOrder.orderId)
 		preparedOrders.push({
 			...preparedOrder,
@@ -902,92 +962,123 @@ export async function publishOrderWithDependencies(params: PublishOrderDependenc
 		})
 	}
 
-	for (const preparedOrder of preparedOrders) {
-		if (!preparedOrder.privateGiftWrapEvent) continue
-		try {
-			await publishRequiredPrivateGiftWrap(preparedOrder.privateGiftWrapEvent)
-		} catch {
-			throw new Error('Encrypted seller delivery could not be published')
-		}
-	}
+	const workflow = await executeSellerOrderPublishWorkflow(
+		preparedOrders.map((preparedOrder) => ({
+			sellerPubkey: preparedOrder.sellerPubkey,
+			orderId: preparedOrder.orderId,
+			requiresPrivateDelivery: Boolean(preparedOrder.privateGiftWrapEvent),
+			...(preparedOrder.privateGiftWrapEvent ? { privateDelivery: preparedOrder.privateGiftWrapEvent } : {}),
+			orderMarker: preparedOrder.orderEvent,
+		})),
+		{
+			publishPrivateDelivery: async (work) => {
+				if (!work.privateDelivery) throw new Error('Encrypted seller delivery could not be prepared')
+				try {
+					await publishRequiredPrivateGiftWrap(work.privateDelivery)
+					return { eventId: work.privateDelivery.id }
+				} catch {
+					throw new Error('Encrypted seller delivery could not be published')
+				}
+			},
+			publishOrderMarker: async (work) => {
+				// Publish the sanitized public marker only after required private details are published.
+				const publishResult = await ndkActions.publishEvent(work.orderMarker)
+				if (publishResultHasRelayDetails(publishResult) && !publishResultHasRelaySuccess(publishResult)) {
+					throw new Error('Order could not be published')
+				}
+				console.log(`✅ Spec-compliant order created for seller ${work.sellerPubkey.substring(0, 8)}...:`, work.orderId)
+				return { eventId: work.orderMarker.id }
+			},
+			publishPaymentRequests: async (work) => {
+				const preparedOrder = preparedOrders.find((item) => item.sellerPubkey === work.sellerPubkey && item.orderId === work.orderId)
+				if (!preparedOrder) throw new Error('Prepared seller order was not found')
+				const { sellerPubkey, data, orderId } = preparedOrder
+				const paymentRequests: PaymentRequestData[] = []
+				const productSubtotal = data.satsTotal - data.shippingSats
+				const v4vRecipients = v4vShares[sellerPubkey] || []
 
-	const newOrderIds: string[] = []
-
-	for (const { sellerPubkey, data, orderEvent, orderId } of preparedOrders) {
-		// 1. Publish the sanitized public order marker only after required private details are published.
-		const orderPublishResult = await ndkActions.publishEvent(orderEvent)
-		if (publishResultHasRelayDetails(orderPublishResult) && !publishResultHasRelaySuccess(orderPublishResult)) {
-			throw new Error('Order could not be published')
-		}
-		newOrderIds.push(orderId)
-		console.log(`✅ Spec-compliant order created for seller ${sellerPubkey.substring(0, 8)}...:`, orderId)
-
-		// 2. Create payment requests for the order (merchant + V4V)
-		const paymentRequests: PaymentRequestData[] = []
-		const productSubtotal = data.satsTotal - data.shippingSats
-		const v4vRecipients = v4vShares[sellerPubkey] || []
-
-		// 2a. Payment request for the merchant's share
-		const merchantShare = data.shares.sellerAmount
-		const sellerProfile = await fetchProfileByIdentifier(sellerPubkey)
-		const sellerLnAddress = sellerProfile?.profile?.lud16 || sellerProfile?.profile?.lud06
-
-		// Always create a payment request event, even if no lightning address is available.
-		// This ensures the order workflow is complete and the payment can be retried later
-		// when the seller configures their payment details.
-		if (!sellerLnAddress) {
-			console.warn(`Seller ${sellerPubkey} has no lightning address. Creating payment request without payment method.`)
-		}
-		paymentRequests.push({
-			buyerPubkey: buyerPubkey,
-			merchantPubkey: sellerPubkey,
-			orderId: orderId,
-			amountSats: merchantShare,
-			// Include payment method if available, otherwise empty array indicates pending payment setup
-			paymentMethods: sellerLnAddress ? [{ type: 'lightning', details: sellerLnAddress }] : [],
-			notes: sellerLnAddress ? `Payment for order ${orderId}` : `Payment for order ${orderId} (seller payment details pending)`,
-		})
-
-		// 2b. Payment requests for V4V shares
-		for (const recipient of v4vRecipients) {
-			const recipientPercentage = recipient.percentage > 1 ? recipient.percentage / 100 : recipient.percentage
-			const recipientAmount = Math.max(1, Math.floor(productSubtotal * recipientPercentage))
-
-			if (recipientAmount > 0) {
-				const recipientProfile = await fetchProfileByIdentifier(recipient.pubkey)
-				const recipientLnAddress = recipientProfile?.profile?.lud16 || recipientProfile?.profile?.lud06
-
-				// Always create a payment request event for V4V recipients, even if no lightning address is available
-				if (!recipientLnAddress) {
-					console.warn(`V4V recipient ${recipient.name} has no lightning address. Creating payment request without payment method.`)
+				const sellerProfile = await fetchProfileByIdentifier(sellerPubkey)
+				const sellerLnAddress = sellerProfile?.profile?.lud16 || sellerProfile?.profile?.lud06
+				if (!sellerLnAddress) {
+					console.warn(`Seller ${sellerPubkey} has no lightning address. Creating payment request without payment method.`)
 				}
 				paymentRequests.push({
-					buyerPubkey: buyerPubkey,
-					merchantPubkey: recipient.pubkey, // V4V recipient is the one getting paid
-					orderId: orderId,
-					amountSats: recipientAmount,
-					// Include payment method if available, otherwise empty array indicates pending payment setup
-					paymentMethods: recipientLnAddress ? [{ type: 'lightning', details: recipientLnAddress }] : [],
-					notes: recipientLnAddress
-						? `V4V share for order ${orderId} (${(recipientPercentage * 100).toFixed(1)}%)`
-						: `V4V share for order ${orderId} (${(recipientPercentage * 100).toFixed(1)}%) - payment details pending`,
+					buyerPubkey,
+					merchantPubkey: sellerPubkey,
+					orderId,
+					amountSats: data.shares.sellerAmount,
+					paymentMethods: sellerLnAddress ? [{ type: 'lightning', details: sellerLnAddress }] : [],
+					notes: sellerLnAddress ? `Payment for order ${orderId}` : `Payment for order ${orderId} (seller payment details pending)`,
 				})
-			}
-		}
 
-		// 3. Publish all payment request events
-		let successfulRequests = 0
-		for (const req of paymentRequests) {
-			try {
-				const paymentRequestEvent = await createPaymentRequestEvent(req)
-				await ndkActions.publishEvent(paymentRequestEvent)
-				successfulRequests++
-			} catch (error) {
-				console.error(`Failed to create payment request for ${req.notes}:`, error)
-			}
-		}
-		console.log(`✅ Created ${successfulRequests}/${paymentRequests.length} payment request events for order ${orderId}`)
+				for (const recipient of v4vRecipients) {
+					const recipientPercentage = recipient.percentage > 1 ? recipient.percentage / 100 : recipient.percentage
+					const recipientAmount = Math.max(1, Math.floor(productSubtotal * recipientPercentage))
+					if (recipientAmount <= 0) continue
+					const recipientProfile = await fetchProfileByIdentifier(recipient.pubkey)
+					const recipientLnAddress = recipientProfile?.profile?.lud16 || recipientProfile?.profile?.lud06
+					if (!recipientLnAddress) {
+						console.warn(`V4V recipient ${recipient.name} has no lightning address. Creating payment request without payment method.`)
+					}
+					paymentRequests.push({
+						buyerPubkey,
+						merchantPubkey: recipient.pubkey,
+						orderId,
+					amountSats: recipientAmount,
+						paymentMethods: recipientLnAddress ? [{ type: 'lightning', details: recipientLnAddress }] : [],
+						notes: recipientLnAddress
+							? `V4V share for order ${orderId} (${(recipientPercentage * 100).toFixed(1)}%)`
+							: `V4V share for order ${orderId} (${(recipientPercentage * 100).toFixed(1)}%) - payment details pending`,
+					})
+				}
+
+				let completed = 0
+				let failed = 0
+				const eventIds: string[] = []
+				for (const request of paymentRequests) {
+					try {
+						const paymentRequestEvent = await createPaymentRequestEvent(request)
+						const publishResult = await ndkActions.publishEvent(paymentRequestEvent)
+						if (publishResultHasRelayDetails(publishResult) && !publishResultHasRelaySuccess(publishResult)) {
+						failed++
+						continue
+					}
+					completed++
+					eventIds.push(paymentRequestEvent.id)
+				} catch (error) {
+					failed++
+					console.error(`Failed to create payment request for ${request.notes}:`, error)
+				}
+				}
+				console.log(`✅ Created ${completed}/${paymentRequests.length} payment request events for order ${orderId}`)
+				return { completed, failed, eventIds }
+			},
+			},
+		)
+	orderIds = workflow.orderIds
+	progress = workflow.progress
+	paymentRequestFailures = workflow.paymentRequestFailures
+	return workflow
+	} catch (error) {
+		return createSellerOrderPublishFailure({
+			orderIds,
+			progress,
+			failedSellerPubkey: activeSellerPubkey,
+			failedOrderId: activeOrderId,
+			failedPhase: phase,
+			error: error instanceof Error ? error.message : 'Order workflow failed',
+			paymentRequestFailures,
+		})
 	}
+}
 
-	return newOrderIds
+/**
+ * Backward-compatible result surface for existing callers. New integrations
+ * should consume publishOrderWorkflowWithDependencies() to inspect partial
+ * outcomes and confirmed per-seller progress.
+ */
+export async function publishOrderWithDependencies(params: PublishOrderDependenciesParams): Promise<string[]> {
+	const outcome = await publishOrderWorkflowWithDependencies(params)
+	if (outcome.status !== 'published') throw new Error(outcome.error)
+	return outcome.orderIds
 }
