@@ -15,3 +15,14 @@ export {
 	ShippingRefSchema,
 } from './cartIntent'
 export type { BuyerCartProductInput, LiveProductRecord, LiveShippingRecord, PersistedCartContent, PersistedCartItem } from './cartIntent'
+export {
+	addCartProduct,
+	aggregateBuyerCartTotals,
+	aggregateCartDisplayTotals,
+	groupCartProductsBySeller,
+	normalizeCartQuantity,
+	removeCartProduct,
+	setCartProductQuantity,
+	updateCartProductQuantity,
+} from './cartOperations'
+export type { BuyerCartTotals, CartDisplayTotals, CartProductEntry, CartProductTotalsInput, CartQuantityAction } from './cartOperations'
