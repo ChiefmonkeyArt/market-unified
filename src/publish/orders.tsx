@@ -12,7 +12,13 @@ import {
 	resolveCheckoutDeliveryRequirements,
 	type CheckoutDeliveryRequirements,
 } from '@sdk/commerce/checkout'
-import { createBuyerOrderTemplate, createBuyerPaymentRequestTemplate } from '@sdk/commerce/orders'
+import {
+	createBuyerOrderTemplate,
+	createBuyerPaymentRequestTemplate,
+	createGeneralOrderCommunicationTemplate,
+	createOrderPaymentReceiptTemplate,
+	createOrderStatusUpdateTemplate,
+} from '@sdk/commerce/orders'
 import { createEncryptedPrivateOrderMessageWithSigner, type PrivateOrderDeliveryDetails } from '@/lib/orders/privateOrderMessage'
 import { fetchProfileByIdentifier } from '@/queries/profiles'
 import { getShippingEvent, getShippingService } from '@/queries/shipping'
@@ -513,24 +519,20 @@ export async function createStatusUpdateEvent(data: StatusUpdateData): Promise<N
 	const ndk = ndkActions.getNDK()
 	if (!ndk) throw new Error('NDK not initialized')
 
-	const now = Math.floor(Date.now() / 1000)
-
-	// Build tags according to spec
-	const tags: NDKTag[] = [
-		// Required tags
-		['p', data.recipientPubkey],
-		['subject', 'order-info'],
-		['type', ORDER_MESSAGE_TYPE.STATUS_UPDATE],
-		['order', data.orderId],
-		['status', data.status],
-	]
+	const template = createOrderStatusUpdateTemplate({
+		recipientPubkey: data.recipientPubkey,
+		orderId: data.orderId,
+		status: data.status,
+		createdAt: Math.floor(Date.now() / 1000),
+		content: data.notes,
+	})
 
 	// Create the event
 	const event = new NDKEvent(ndk)
-	event.kind = ORDER_PROCESS_KIND
-	event.created_at = now
-	event.content = data.notes || `Order status updated to ${data.status}`
-	event.tags = tags
+	event.kind = template.kind as typeof ORDER_PROCESS_KIND
+	event.created_at = template.created_at
+	event.content = template.content
+	event.tags = template.tags as NDKTag[]
 
 	// Sign the event
 	await event.sign()
@@ -546,24 +548,23 @@ export async function createPaymentReceiptEvent(data: PaymentReceiptData): Promi
 	const ndk = ndkActions.getNDK()
 	if (!ndk) throw new Error('NDK not initialized')
 
-	const now = Math.floor(Date.now() / 1000)
-
-	// Build tags according to spec
-	const tags: NDKTag[] = [
-		// Required tags
-		['p', data.merchantPubkey],
-		['subject', 'order-receipt'],
-		['order', data.orderId],
-		['payment', data.paymentProof.medium, data.paymentProof.reference, data.paymentProof.proof],
-		['amount', data.amountSats.toString()],
-	]
+	const template = createOrderPaymentReceiptTemplate({
+		merchantPubkey: data.merchantPubkey,
+		orderId: data.orderId,
+		amountSats: data.amountSats,
+		medium: data.paymentProof.medium,
+		reference: data.paymentProof.reference,
+		proof: data.paymentProof.proof,
+		createdAt: Math.floor(Date.now() / 1000),
+		content: data.notes,
+	})
 
 	// Create the event
 	const event = new NDKEvent(ndk)
-	event.kind = PAYMENT_RECEIPT_KIND
-	event.created_at = now
-	event.content = data.notes || 'Payment confirmation'
-	event.tags = tags
+	event.kind = template.kind as typeof PAYMENT_RECEIPT_KIND
+	event.created_at = template.created_at
+	event.content = template.content
+	event.tags = template.tags as NDKTag[]
 
 	// Sign the event
 	await event.sign()
@@ -579,20 +580,19 @@ export async function createGeneralCommunicationEvent(recipientPubkey: string, s
 	const ndk = ndkActions.getNDK()
 	if (!ndk) throw new Error('NDK not initialized')
 
-	const now = Math.floor(Date.now() / 1000)
-
-	// Build tags according to spec
-	const tags: NDKTag[] = [
-		['p', recipientPubkey],
-		['subject', subject],
-	]
+	const template = createGeneralOrderCommunicationTemplate({
+		recipientPubkey,
+		subject,
+		content: message,
+		createdAt: Math.floor(Date.now() / 1000),
+	})
 
 	// Create the event
 	const event = new NDKEvent(ndk)
-	event.kind = ORDER_GENERAL_KIND
-	event.created_at = now
-	event.content = message
-	event.tags = tags
+	event.kind = template.kind as typeof ORDER_GENERAL_KIND
+	event.created_at = template.created_at
+	event.content = template.content
+	event.tags = template.tags as NDKTag[]
 
 	// Sign the event
 	await event.sign()

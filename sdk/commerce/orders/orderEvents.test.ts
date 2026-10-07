@@ -4,6 +4,10 @@ import {
 	createBuyerOrderTemplate,
 	createBuyerPaymentReceiptTemplate,
 	createBuyerPaymentRequestTemplate,
+	createGeneralOrderCommunicationTemplate,
+	createOrderPaymentReceiptTemplate,
+	createOrderStatusUpdateTemplate,
+	createShippingStatusUpdateTemplate,
 } from './orderEvents'
 
 describe('buyer order event templates', () => {
@@ -72,5 +76,79 @@ describe('buyer order event templates', () => {
 				['subject', 'order'],
 			],
 		})
+	})
+
+	test('builds seller status and shipping updates without defining authorization', () => {
+		expect(
+			createOrderStatusUpdateTemplate({
+				recipientPubkey: 'b'.repeat(64),
+				orderId: 'order-2',
+				status: 'processing',
+				createdAt: 104,
+			}),
+		).toEqual({
+			kind: 16,
+			created_at: 104,
+			content: 'Order status updated to processing',
+			tags: [
+				['p', 'b'.repeat(64)],
+				['subject', 'order-info'],
+				['type', '3'],
+				['order', 'order-2'],
+				['status', 'processing'],
+			],
+		})
+		expect(
+			createShippingStatusUpdateTemplate({
+				recipientPubkey: 'b'.repeat(64),
+				orderId: 'order-2',
+				status: 'shipped',
+				tracking: 'TRACK-1',
+				carrier: 'Carrier',
+				eta: 'tomorrow',
+				createdAt: 105,
+			}),
+		).toEqual({
+			kind: 16,
+			created_at: 105,
+			content: 'Shipping update',
+			tags: [
+				['p', 'b'.repeat(64)],
+				['subject', 'shipping-info'],
+				['type', '4'],
+				['order', 'order-2'],
+				['status', 'shipped'],
+				['tracking', 'TRACK-1'],
+				['carrier', 'Carrier'],
+				['eta', 'tomorrow'],
+			],
+		})
+	})
+
+	test('builds the legacy general communication format and generic payment receipt', () => {
+		expect(
+			createGeneralOrderCommunicationTemplate({
+				recipientPubkey: 'b'.repeat(64),
+				subject: '',
+				content: 'Message',
+				createdAt: 106,
+			}),
+		).toEqual({
+			kind: 14,
+			created_at: 106,
+			content: 'Message',
+			tags: [['p', 'b'.repeat(64)], ['subject', '']],
+		})
+		const receipt = createOrderPaymentReceiptTemplate({
+			merchantPubkey: 'b'.repeat(64),
+			orderId: 'order-2',
+			amountSats: 900,
+			medium: 'bitcoin',
+			reference: 'txid',
+			proof: 'proof',
+			createdAt: 107,
+		})
+		expect(receipt.kind).toBe(17)
+		expect(receipt.tags).toContainEqual(['payment', 'bitcoin', 'txid', 'proof'])
 	})
 })
