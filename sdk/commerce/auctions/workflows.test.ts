@@ -1,0 +1,302 @@
+import { describe, expect, test } from 'bun:test'
+import type { ParsedAuctionEvent } from './events'
+import {
+	createAuctionBidTemplate,
+	executeAuctionListingWorkflow,
+	executeAuctionSettlementWorkflow,
+	executeAuctionWinnerClaimWorkflow,
+	executeFundedAuctionBidWorkflow,
+	planAuctionBid,
+	planAuctionSettlement,
+	prepareAuctionListing,
+	prepareAuctionWinnerClaim,
+	retryAuctionBidPublish,
+	type AuctionBidPlan,
+	type AuctionSettlementPlan,
+} from './workflows'
+
+const auction = {
+	rawEvent: {} as ParsedAuctionEvent['rawEvent'],
+	dTag: 'lot-1',
+	sellerPubkey: 'a'.repeat(64),
+	coordinate: `30408:${'a'.repeat(64)}:lot-1`,
+	rootEventId: 'b'.repeat(64),
+	title: 'Lot',
+	content: '',
+	auctionType: 'english',
+	startAt: 100,
+	endAt: 200,
+	maxEndAt: 210,
+	settlementGrace: 300,
+	currency: 'SAT',
+	reserve: 0,
+	startingBid: 20,
+	bidIncrement: 5,
+	minBidCurve: { shape: 'none', peakMultiplier: 1, raw: '' },
+	settlementPolicy: 'cashu_p2pk_bidder_path_v1',
+	keyScheme: 'hd_p2pk',
+	mints: ['https://mint.example'],
+	p2pkXpub: 'xpub',
+	auditors: ['c'.repeat(64)],
+	auditorQuorum: 1,
+	maxSkewSec: 120,
+	fallbackDelaySec: 150,
+	schema: 'auction_v1',
+} as ParsedAuctionEvent
+
+const listingInput = {
+	auction: {
+		dTag: 'lot-1',
+		title: 'Lot',
+		startAt: 100,
+		endAt: 200,
+		maxEndAt: 210,
+		settlementGrace: 300,
+		reserve: 20,
+		startingBid: 10,
+		bidIncrement: 5,
+		mints: ['https://mint.example'],
+		p2pkXpub: 'xpub',
+		auditors: ['c'.repeat(64)],
+	},
+	content: 'Details',
+	createdAt: 99,
+}
+
+describe('auction lifecycle SDK workflows', () => {
+	test('prepares a listing and runs mint preflight before signing and publishing', async () => {
+		const template = prepareAuctionListing(listingInput)
+		expect(template.kind).toBe(30408)
+		expect(template.tags).toContainEqual(['starting_bid', '10'])
+		const order: string[] = []
+		const outcome = await executeAuctionListingWorkflow(listingInput, {
+			assertMintsSupported: async () => {
+				order.push('mint')
+			},
+			sign: async () => {
+				order.push('sign')
+				return { id: 'listing-id' }
+			},
+			publish: async () => {
+				order.push('publish')
+			},
+		})
+		expect(outcome).toEqual({ status: 'published', eventId: 'listing-id' })
+		expect(order).toEqual(['mint', 'sign', 'publish'])
+	})
+
+	test('plans cumulative rebids as delta funding and builds the canonical bid template', () => {
+		const plan = planAuctionBid({
+			auction,
+			bidderPubkey: 'd'.repeat(64),
+			amount: 60,
+			topBid: 50,
+			now: 150,
+			previousLeg: {
+				id: 'previous-bid',
+				bidderPubkey: 'd'.repeat(64),
+				auctionRootEventId: auction.rootEventId,
+				auctionCoordinate: auction.coordinate,
+				amount: 50,
+				locktime: 510,
+			},
+		})
+		expect(plan.legAmount).toBe(10)
+		expect(plan.locktime).toBe(510)
+		expect(plan.previousBidId).toBe('previous-bid')
+		const template = createAuctionBidTemplate(plan, {
+			mint: 'https://mint.example',
+			refundPubkey: 'refund',
+			childPubkey: 'child',
+			lockSecrets: ['secret'],
+			proofYs: ['y'],
+			dleqProofs: [{ id: 'keyset', amount: 10, C: 'C', e: 'e', s: 's', r: 'r' }],
+			bidNonce: 'nonce',
+			createdAt: 151,
+		})
+		expect(template.kind).toBe(1023)
+		expect(template.tags).toContainEqual(['prev_bid', 'previous-bid'])
+		expect(template.tags).toContainEqual(['amount', '60'])
+	})
+
+	test('reports the anti-snipe floor as advisory without rejecting a valid lower bid', () => {
+		const plan = planAuctionBid({
+			auction: { ...auction, minBidCurve: { shape: 'linear', peakMultiplier: 2, raw: 'linear:2' } },
+			bidderPubkey: 'd'.repeat(64),
+			amount: 55,
+			topBid: 50,
+			now: 205,
+		})
+		expect(plan.minimumAmount).toBe(20)
+		expect(plan.suggestedAmount).toBeGreaterThan(plan.amount)
+	})
+
+	test('does not acquire funding after pre-lock recovery persistence fails', async () => {
+		const plan: AuctionBidPlan = {
+			auctionRootEventId: auction.rootEventId,
+			auctionCoordinate: auction.coordinate,
+			sellerPubkey: auction.sellerPubkey,
+			amount: 30,
+			legAmount: 30,
+			minimumAmount: 20,
+			suggestedAmount: 20,
+			locktime: 510,
+			createdForEndAt: 210,
+		}
+		let lockCalls = 0
+		const outcome = await executeFundedAuctionBidWorkflow(plan, {
+			prepareLock: async () => ({ intent: {}, preLockRecovery: {} }),
+			persistPreLockRecovery: async () => {
+				throw new Error('disk unavailable')
+			},
+			lockFunds: async () => {
+				lockCalls++
+				return { status: 'locked', funding: {} }
+			},
+			createPublication: async () => ({ event: 'event', recovery: {} }),
+			persistFundedPublication: async () => {},
+			sign: async () => ({ id: 'signed' }),
+			persistSignedEvent: async () => {},
+			publish: async () => {},
+		})
+		expect(outcome.status).toBe('failed_before_lock')
+		expect(lockCalls).toBe(0)
+	})
+
+	test('funded bid publication failure is retryable and retry cannot lock again', async () => {
+		const plan: AuctionBidPlan = {
+			auctionRootEventId: auction.rootEventId,
+			auctionCoordinate: auction.coordinate,
+			sellerPubkey: auction.sellerPubkey,
+			amount: 30,
+			legAmount: 30,
+			minimumAmount: 20,
+			suggestedAmount: 20,
+			locktime: 510,
+			createdForEndAt: 210,
+		}
+		const calls: string[] = []
+		const outcome = await executeFundedAuctionBidWorkflow(plan, {
+			prepareLock: async () => ({ intent: 'intent', preLockRecovery: 'pre' }),
+			persistPreLockRecovery: async () => {
+				calls.push('persist-pre')
+			},
+			lockFunds: async () => {
+				calls.push('lock')
+				return { status: 'locked', funding: 'proofs' }
+			},
+			createPublication: async () => ({ event: 'exact-event', recovery: 'record' }),
+			persistFundedPublication: async () => {
+				calls.push('persist-event')
+			},
+			sign: async () => {
+				calls.push('sign')
+				return { id: 'bid-id' }
+			},
+			persistSignedEvent: async () => {
+				calls.push('persist-signed')
+			},
+			publish: async () => {
+				calls.push('publish')
+				throw new Error('relay timeout')
+			},
+		})
+		expect(outcome).toMatchObject({ status: 'publish_retryable', signedEvent: { id: 'bid-id' } })
+		const retry = await retryAuctionBidPublish({
+			load: async () => ({ event: 'exact-event', signedEvent: { id: 'bid-id' }, recovery: 'record' }),
+			sign: async () => {
+				throw new Error('must reuse signed event')
+			},
+			persistSignedEvent: async () => {
+				throw new Error('must already be persisted')
+			},
+			publish: async (event) => {
+				calls.push(`retry:${event.id}`)
+			},
+		})
+		expect(retry).toEqual({ status: 'published', eventId: 'bid-id' })
+		expect(calls.filter((call) => call === 'lock')).toHaveLength(1)
+		expect(calls.at(-1)).toBe('retry:bid-id')
+	})
+
+	test('settlement preflights the full chain, resumes confirmed redeemed legs, then publishes', async () => {
+		const plan: AuctionSettlementPlan<string> = planAuctionSettlement({
+			status: 'settled',
+			auction,
+			closeAt: 220,
+			createdAt: 221,
+			winningBidId: 'bid-2',
+			winnerPubkey: 'd'.repeat(64),
+			finalAmount: 20,
+			pathReleaseEventId: 'release',
+			legs: [
+				{ bidEventId: 'bid-1', amount: 10, locktime: 510, redemptionData: 'first' },
+				{ bidEventId: 'bid-2', amount: 10, locktime: 510, redemptionData: 'second' },
+			],
+		})
+		const calls: string[] = []
+		const outcome = await executeAuctionSettlementWorkflow(plan, {
+			preflightAll: async () => {
+				calls.push('preflight')
+			},
+			inspectLeg: async (leg) => {
+				calls.push(`inspect:${leg.bidEventId}`)
+				return leg.bidEventId === 'bid-1' ? 'redeemed_by_seller' : 'unspent'
+			},
+			redeemLeg: async (leg) => {
+				calls.push(`redeem:${leg.bidEventId}`)
+			},
+			assertReserveNotMet: async () => {},
+			publish: async (template) => {
+				calls.push('publish')
+				expect(template.tags).toContainEqual(['payout', 'bid-1', '10', 'redeemed'])
+				return { eventId: 'settlement-id' }
+			},
+		})
+		expect(outcome).toEqual({ status: 'published', eventId: 'settlement-id', redeemedBidIds: ['bid-1', 'bid-2'] })
+		expect(calls).toEqual(['preflight', 'inspect:bid-1', 'inspect:bid-2', 'redeem:bid-2', 'publish'])
+	})
+
+	test('winner claim marker has no delivery PII and preserves private-first partial progress', async () => {
+		const claim = {
+			orderId: 'order-1',
+			auctionCoordinate: auction.coordinate,
+			auctionEventId: 'e'.repeat(64),
+			settlementEventId: 'f'.repeat(64),
+			buyerPubkey: 'd'.repeat(64),
+			sellerPubkey: auction.sellerPubkey,
+			finalAmount: 100,
+			shippingAddress: {
+				name: 'Buyer Name',
+				firstLineOfAddress: 'Secret Street',
+				city: 'Private City',
+				zipPostcode: '12345',
+				country: 'XX',
+			},
+			email: 'buyer@example.test',
+			phone: '555-0100',
+			notes: 'Leave privately',
+			createdAt: 300,
+		}
+		const prepared = prepareAuctionWinnerClaim(claim)
+		expect(JSON.stringify(prepared.marker)).not.toContain('Secret Street')
+		expect(JSON.stringify(prepared.marker)).not.toContain('buyer@example.test')
+		const outcome = await executeAuctionWinnerClaimWorkflow(claim, {
+			createPrivateDelivery: async (payload) => payload,
+			publishPrivateDelivery: async () => ({
+				eventId: 'gift-wrap-id',
+				acceptedRelays: ['wss://private.example'],
+			}),
+			signMarker: async () => ({ id: 'marker-id' }),
+			publishMarker: async (_marker, relays) => {
+				expect(relays).toEqual(['wss://private.example'])
+				throw new Error('marker relay timeout')
+			},
+		})
+		expect(outcome).toMatchObject({
+			status: 'partial',
+			privateDeliveryEventId: 'gift-wrap-id',
+			acceptedRelays: ['wss://private.example'],
+		})
+	})
+})
