@@ -1,2 +1,8 @@
 export { getEventAddress, toRawEvent } from './nostr/eventLike'
 export type { NostrEventLike } from './nostr/eventLike'
+export type { Signer, SignedEventLike } from './ports/signer'
+export type { EncryptingSigner, SignableRumorLike } from './ports/encryptingSigner'
+export { UnsupportedSignerOperationError } from './ports/encryptingSigner'
+export * from './nostr/nip59'
+export * from './nostr/nip17'
+export * from './nostr/nip17Relays'

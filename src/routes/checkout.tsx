@@ -803,7 +803,9 @@ function RouteComponent() {
 				})
 				if (orderOutcome.status === 'partial') {
 					setPartialOrderOutcome(orderOutcome)
-					toast.error(`Order creation partially succeeded: ${orderOutcome.orderIds.length} seller order(s) were published. Do not retry this checkout.`)
+					toast.error(
+						`Order creation partially succeeded: ${orderOutcome.orderIds.length} seller order(s) were published. Do not retry this checkout.`,
+					)
 					setIsCreatingOrder(false)
 					return
 				}
@@ -811,7 +813,9 @@ function RouteComponent() {
 
 				setSpecOrderIds(orderOutcome.orderIds)
 				if (orderOutcome.paymentRequestFailures > 0) {
-					toast.warning(`${orderOutcome.paymentRequestFailures} payment request(s) could not be published; orders were created and payment can be retried later.`)
+					toast.warning(
+						`${orderOutcome.paymentRequestFailures} payment request(s) could not be published; orders were created and payment can be retried later.`,
+					)
 				}
 				console.log('\n🎉 Order creation process complete. Generated Order IDs:', orderOutcome.orderIds)
 			} catch (error) {
@@ -1008,7 +1012,9 @@ function RouteComponent() {
 												<div role="alert" className="mb-4 rounded-md border border-amber-500 bg-amber-50 p-4 text-sm text-amber-950">
 													<p className="font-semibold">Some seller orders were published, but checkout did not finish.</p>
 													<p>Do not retry this checkout. Published order IDs: {partialOrderOutcome.orderIds.join(', ') || 'none'}.</p>
-													<p>Failure phase: {partialOrderOutcome.failedPhase}. {partialOrderOutcome.error}</p>
+													<p>
+														Failure phase: {partialOrderOutcome.failedPhase}. {partialOrderOutcome.error}
+													</p>
 												</div>
 											)}
 											<OrderFinalizeComponent

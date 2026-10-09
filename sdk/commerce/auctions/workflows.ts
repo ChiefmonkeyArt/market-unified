@@ -1,4 +1,5 @@
 import type { EventTemplate } from 'nostr-tools/pure'
+import type { Signer, SignedEventLike } from '../../core/ports/signer'
 import { AUCTION_BID_KIND, AUCTION_KIND, AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS, AUCTION_SETTLEMENT_KIND } from './constants'
 import type { ParsedAuctionEvent } from './events'
 import {
@@ -58,9 +59,8 @@ export function prepareAuctionListing(input: AuctionListingWorkflowInput): Event
 	}
 }
 
-export interface AuctionListingPublishPorts<SignedEvent extends { id: string }> {
+export interface AuctionListingPublishPorts<SignedEvent extends SignedEventLike> extends Signer<SignedEvent> {
 	assertMintsSupported(mints: readonly string[]): Promise<void>
-	sign(template: EventTemplate): Promise<SignedEvent>
 	publish(event: SignedEvent): Promise<void>
 }
 
@@ -70,7 +70,7 @@ export type AuctionListingPublishOutcome =
 	| { status: 'publish_uncertain'; eventId: string; error: string }
 
 /** Execute listing publication in validation → mint preflight → sign → publish order. */
-export async function executeAuctionListingWorkflow<SignedEvent extends { id: string }>(
+export async function executeAuctionListingWorkflow<SignedEvent extends SignedEventLike>(
 	input: AuctionListingWorkflowInput,
 	ports: AuctionListingPublishPorts<SignedEvent>,
 ): Promise<AuctionListingPublishOutcome> {
@@ -231,7 +231,7 @@ export interface AuctionBidPublication<Event, Recovery> {
 	recovery: Recovery
 }
 
-export interface AuctionBidWorkflowPorts<Intent, Funding, Event, SignedEvent extends { id: string }, Recovery> {
+export interface AuctionBidWorkflowPorts<Intent, Funding, Event, SignedEvent extends SignedEventLike, Recovery> {
 	/** Generate a fresh path and per-leg refund authority; do not lock funds here. */
 	prepareLock(plan: AuctionBidPlan): Promise<{ intent: Intent; preLockRecovery: Recovery }>
 	/** Must durably confirm the recovery record before lockFunds is called. */
@@ -242,6 +242,10 @@ export interface AuctionBidWorkflowPorts<Intent, Funding, Event, SignedEvent ext
 	createPublication(input: { plan: AuctionBidPlan; intent: Intent; funding: Funding }): Promise<AuctionBidPublication<Event, Recovery>>
 	/** Persist proofs/refund authority and the exact rebroadcastable event before signing. */
 	persistFundedPublication(publication: AuctionBidPublication<Event, Recovery>): Promise<void>
+	/**
+	 * Signs the workflow's own `Event` shape (produced by `createPublication`), not a
+	 * plain `EventTemplate` — richer than `Signer`'s contract, so this stays bespoke.
+	 */
 	sign(event: Event): Promise<SignedEvent>
 	persistSignedEvent(event: SignedEvent, recovery: Recovery): Promise<void>
 	publish(event: SignedEvent): Promise<void>
@@ -259,7 +263,7 @@ export type AuctionBidWorkflowOutcome<SignedEvent> =
  * succeeded: pre-lock persistence is mandatory, and post-lock failures return
  * recovery-only or exact-event-retry outcomes.
  */
-export async function executeFundedAuctionBidWorkflow<Intent, Funding, Event, SignedEvent extends { id: string }, Recovery>(
+export async function executeFundedAuctionBidWorkflow<Intent, Funding, Event, SignedEvent extends SignedEventLike, Recovery>(
 	plan: AuctionBidPlan,
 	ports: AuctionBidWorkflowPorts<Intent, Funding, Event, SignedEvent, Recovery>,
 ): Promise<AuctionBidWorkflowOutcome<SignedEvent>> {
@@ -316,7 +320,7 @@ export async function executeFundedAuctionBidWorkflow<Intent, Funding, Event, Si
 }
 
 /** Retry a persisted bid using its exact event; this API intentionally has no wallet/lock port. */
-export async function retryAuctionBidPublish<Event, SignedEvent extends { id: string }, Recovery>(ports: {
+export async function retryAuctionBidPublish<Event, SignedEvent extends SignedEventLike, Recovery>(ports: {
 	load(): Promise<{ event: Event; signedEvent?: SignedEvent; recovery: Recovery }>
 	sign(event: Event): Promise<SignedEvent>
 	persistSignedEvent(event: SignedEvent, recovery: Recovery): Promise<void>
@@ -604,7 +608,7 @@ export function prepareAuctionWinnerClaim(input: AuctionWinnerClaimInput): Prepa
 	}
 }
 
-export interface AuctionWinnerClaimPorts<PrivateDelivery, SignedMarker extends { id: string }> {
+export interface AuctionWinnerClaimPorts<PrivateDelivery, SignedMarker extends SignedEventLike> {
 	createPrivateDelivery(payload: AuctionWinnerClaimPayload): Promise<PrivateDelivery>
 	publishPrivateDelivery(delivery: PrivateDelivery): Promise<{ eventId: string; acceptedRelays: string[] }>
 	signMarker(marker: EventTemplate): Promise<SignedMarker>
@@ -623,7 +627,7 @@ export type AuctionWinnerClaimOutcome =
 	  }
 
 /** Publish encrypted delivery details first, then the public marker only to relays that accepted the private wrap. */
-export async function executeAuctionWinnerClaimWorkflow<PrivateDelivery, SignedMarker extends { id: string }>(
+export async function executeAuctionWinnerClaimWorkflow<PrivateDelivery, SignedMarker extends SignedEventLike>(
 	input: AuctionWinnerClaimInput,
 	ports: AuctionWinnerClaimPorts<PrivateDelivery, SignedMarker>,
 ): Promise<AuctionWinnerClaimOutcome> {
