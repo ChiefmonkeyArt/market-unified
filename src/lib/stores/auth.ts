@@ -1,9 +1,11 @@
 import { NDKNip07Signer, NDKNip46Signer, NDKPrivateKeySigner, NDKUser, NDKEvent } from '@nostr-dev-kit/ndk'
 import { Store } from '@tanstack/store'
+import { configureUserScope } from '@/lib/wallet/storage'
+import { clearSignerOnboarding, runSignerOnboarding } from '@/lib/session/signerOnboarding'
 import { ndkActions } from './ndk'
 import { cartActions } from './cart'
 import { fetchProductsByPubkey } from '@/queries/products'
-import { hasAcceptedTerms, TERMS_ACCEPTED_KEY } from '@/components/dialogs/TermsConditionsDialog'
+import { hasAcceptedTerms, TERMS_ACCEPTED_KEY } from '@/lib/terms'
 import { uiActions } from './ui'
 import { auctionWonActions } from './auctionWon'
 import { getPublicKey, nip19 } from 'nostr-tools'
@@ -37,6 +39,9 @@ const initialState: AuthState = {
 }
 
 export const authStore = new Store<AuthState>(initialState)
+
+// Wallet/bidder storage is scoped per user; tell it who the user is (see lib/wallet/storage.ts).
+configureUserScope(() => authStore.state.user?.pubkey)
 
 export const authActions = {
 	getAuthFromLocalStorageAndLogin: async () => {
@@ -163,7 +168,7 @@ export const authActions = {
 			// NWC select, NIP-60 init) in the background — login can
 			// resolve before these finish so the user isn't gated on a
 			// slow relay-list fetch.
-			void ndkActions.runSignerOnboarding(signer)
+			void runSignerOnboarding(signer)
 
 			const user = await signer.user()
 
@@ -218,7 +223,7 @@ export const authActions = {
 			// NWC select, NIP-60 init) in the background — login can
 			// resolve before these finish so the user isn't gated on a
 			// slow relay-list fetch.
-			void ndkActions.runSignerOnboarding(signer)
+			void runSignerOnboarding(signer)
 
 			const user = await signer.user()
 
@@ -274,7 +279,7 @@ export const authActions = {
 			// NWC select, NIP-60 init) in the background — login can
 			// resolve before these finish so the user isn't gated on a
 			// slow relay-list fetch.
-			void ndkActions.runSignerOnboarding(signer)
+			void runSignerOnboarding(signer)
 			const user = await signer.user()
 
 			// Wait until user is logged in successfully before saving the bunkerURL/private key.
@@ -309,7 +314,7 @@ export const authActions = {
 		ndkActions.removeSigner()
 		// Tear down per-user state (NWC selection, NIP-60 wallet).
 		// Mirrors `runSignerOnboarding` on the login side.
-		ndkActions.clearSignerOnboarding()
+		clearSignerOnboarding()
 		localStorage.removeItem(NOSTR_LOCAL_SIGNER_KEY)
 		localStorage.removeItem(NOSTR_CONNECT_KEY)
 		localStorage.removeItem(NOSTR_LOCAL_ENCRYPTED_SIGNER_KEY)

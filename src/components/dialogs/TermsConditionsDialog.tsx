@@ -4,7 +4,9 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useConfigQuery } from '@/queries/config'
 import { ExternalLink } from 'lucide-react'
 
-export const TERMS_ACCEPTED_KEY = 'plebeian_terms_accepted'
+import { TERMS_ACCEPTED_KEY } from '@/lib/terms'
+
+export { hasAcceptedTerms, TERMS_ACCEPTED_KEY } from '@/lib/terms'
 
 interface TermsConditionsDialogProps {
 	open: boolean
@@ -190,6 +192,3 @@ export function TermsConditionsDialog({ open, onOpenChange, onAccept }: TermsCon
 	)
 }
 
-export function hasAcceptedTerms(): boolean {
-	return localStorage.getItem(TERMS_ACCEPTED_KEY) === 'true'
-}

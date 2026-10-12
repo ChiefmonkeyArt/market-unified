@@ -21,6 +21,7 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run generate-routes
       - run: bash scripts/check-tsc-ratchet.sh
+      - run: bash scripts/check-cycles.sh
 
   package-smoke:
     runs-on: ubuntu-latest

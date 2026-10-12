@@ -1,4 +1,14 @@
-import { authStore } from '@/lib/stores/auth'
+/**
+ * Who the current user is, for scoping storage keys. Injected by the auth store at load
+ * (`configureUserScope`) so this module does not import auth: that import closed the
+ * auth -> session -> nip60 -> bidderRecords -> storage -> auth loop.
+ * Unconfigured means "no authenticated user": loads return defaults and strict saves fail closed.
+ */
+let currentUserPubkey: () => string | undefined = () => undefined
+
+export function configureUserScope(provider: () => string | undefined): void {
+	currentUserPubkey = provider
+}
 
 /**
  * Get a user-scoped storage key.
@@ -6,7 +16,7 @@ import { authStore } from '@/lib/stores/auth'
  * @returns The full storage key, or null if user not authenticated
  */
 function getUserScopedKey(prefix: string): string | null {
-	const pubkey = authStore.state.user?.pubkey
+	const pubkey = currentUserPubkey()
 	if (!pubkey) return null
 	return `${prefix}_${pubkey.slice(0, 8)}`
 }

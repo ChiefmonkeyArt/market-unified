@@ -1,7 +1,5 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { ndkActions } from './stores/ndk'
-import type { NDKUser } from '@nostr-dev-kit/ndk'
 import { toast } from 'sonner'
 import { HEX_KEYS_REGEX } from './constants'
 import { EMAIL_REGEX } from './constants'
@@ -64,35 +62,6 @@ export function isValidNpub(input: string): boolean {
 		return type === 'npub' && typeof data === 'string' && isValidHexKey(data)
 	} catch {
 		return false
-	}
-}
-
-export const userFromIdentifier = async (identifier: string): Promise<NDKUser | undefined> => {
-	try {
-		const ndk = ndkActions.getNDK()
-		if (!ndk) return undefined
-
-		if (identifier.includes('@')) {
-			if (!isValidNip05(identifier)) {
-				throw new Error('Invalid NIP-05 identifier')
-			}
-			return await ndk.getUserFromNip05(identifier)
-		}
-
-		if (identifier.startsWith('npub')) {
-			if (!isValidNpub(identifier)) {
-				throw new Error('Invalid npub')
-			}
-			return ndk.getUser({ npub: identifier })
-		}
-
-		if (!isValidHexKey(identifier)) {
-			throw new Error('Invalid hex key')
-		}
-		return ndk.getUser({ pubkey: identifier })
-	} catch (error) {
-		console.error('Error in userFromIdentifier:', error)
-		return undefined
 	}
 }
 

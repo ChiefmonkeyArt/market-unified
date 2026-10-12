@@ -1,13 +1,9 @@
 import { defaultRelaysUrls, type Stage } from '@/lib/constants'
 import { computeNdkConfig, resolveMainRelay } from '@/lib/relay-policy'
-import { fetchNwcWalletBalance, fetchUserNwcWallets } from '@/queries/wallet'
-import { fetchUserRelayListWithPreferences } from '@/queries/relay-list'
 import type { NDKFilter, NDKSigner, NDKSubscriptionOptions, NDKUser } from '@nostr-dev-kit/ndk'
 import NDK, { NDKEvent, NDKKind, NDKRelaySet } from '@nostr-dev-kit/ndk'
 import { Store } from '@tanstack/store'
 import { configStore } from './config'
-import { nip60Actions } from './nip60'
-import { walletActions, walletStore, type Wallet } from './wallet'
 
 /**
  * Connection health, derived from pool events + the watchdog.
@@ -378,7 +374,7 @@ export const ndkActions = {
 			const subscriptionOpts = {
 				...subOpts,
 				closeOnEose: true,
-				onEvent: (event) => {
+				onEvent: (event: NDKEvent) => {
 					const key = event.deduplicationKey()
 					const existing = events.get(key)
 					if (!existing) {
@@ -703,7 +699,7 @@ export const ndkActions = {
 	 * effects beyond the assignment — for the downstream "user is
 	 * signed in" pipeline (relay-list load, NWC selection, NIP-60
 	 * wallet bootstrap, etc.) the auth flow calls
-	 * `runSignerOnboarding(signer)` explicitly. Decoupling those steps
+	 * `runSignerOnboarding(signer)` from `@/lib/session/signerOnboarding` explicitly. Decoupling those steps
 	 * keeps `setSigner` readable and the auth flow's effects visible
 	 * at the call site instead of buried inside a setter.
 	 */
@@ -726,180 +722,12 @@ export const ndkActions = {
 		ndkStore.setState((s) => ({ ...s, signer }))
 	},
 
-	/**
-	 * Post-signer pipeline: load the user's NIP-65 relay list, select
-	 * the best NWC wallet by balance, and bootstrap the NIP-60 Cashu
-	 * wallet. The three are run concurrently — they only share `user`
-	 * (derived once up front) and don't observe each other.
-	 *
-	 * The auth flow MUST call this after `setSigner(s)` for a fresh
-	 * login. Logout calls `clearSignerOnboarding()` instead.
-	 */
-	runSignerOnboarding: async (signer: NDKSigner): Promise<void> => {
-		let user: NDKUser | null = null
-		try {
-			user = await signer.user()
-		} catch (error) {
-			console.error('[ndk] Failed to resolve user from signer; skipping onboarding pipeline:', error)
-			return
-		}
-		if (!user?.pubkey) {
-			console.warn('[ndk] Signer returned no pubkey; skipping onboarding pipeline')
-			return
-		}
-
-		// Run in parallel — each step handles its own failure (caller
-		// just sees a warning) so a failed NWC lookup doesn't block
-		// NIP-60 init and vice versa.
-		const userPubkey = user.pubkey
-		await Promise.all([
-			ndkActions.loadRelaysFromNostr().catch((e) => console.error('[ndk] loadRelaysFromNostr failed:', e)),
-			ndkActions.selectAndSetInitialNwcWallet().catch((e) => console.error('[ndk] selectAndSetInitialNwcWallet failed:', e)),
-			(async () => {
-				try {
-					await nip60Actions.initialize(userPubkey)
-				} catch (e) {
-					console.error('[ndk] nip60Actions.initialize failed:', e)
-				}
-			})(),
-		])
-	},
-
-	/**
-	 * Tear-down counterpart to `runSignerOnboarding`. Auth logout calls
-	 * this after `setSigner(undefined)` so the store doesn't carry
-	 * stale NWC / NIP-60 state into the unauthenticated session.
-	 */
-	clearSignerOnboarding: (): void => {
-		ndkActions.setActiveNwcWalletUri(null)
-		nip60Actions.reset()
-	},
-
-	/**
-	 * Load user's relay list from Nostr (kind 10002)
-	 * This enables the outbox model to work properly by adding user's preferred relays
-	 */
-	loadRelaysFromNostr: async (): Promise<void> => {
-		const ndk = ndkStore.state.ndk
-		if (!ndk || !ndk.signer) {
-			console.warn('NDK or signer not available for loading relays')
-			return
-		}
-
-		let user: NDKUser | null = null
-		try {
-			user = await ndk.signer.user()
-		} catch (e) {
-			console.error('Error getting user from signer:', e)
-			return
-		}
-
-		if (!user || !user.pubkey) {
-			console.warn('User or user pubkey not available from signer')
-			return
-		}
-
-		try {
-			const relayPrefs = await fetchUserRelayListWithPreferences(user.pubkey)
-			if (relayPrefs && relayPrefs.length > 0) {
-				console.log(`📡 Loading ${relayPrefs.length} relays from user's Nostr relay list`)
-				for (const relay of relayPrefs) {
-					ndkActions.addSingleRelay(relay.url)
-				}
-			} else {
-				console.log('📡 No relay list found on Nostr for user')
-			}
-		} catch (error) {
-			console.error('Failed to load relays from Nostr:', error)
-		}
-	},
-
 	removeSigner: () => {
 		ndkActions.setSigner(undefined)
 	},
 
 	setActiveNwcWalletUri: (uri: string | null) => {
 		ndkStore.setState((state) => ({ ...state, activeNwcWalletUri: uri }))
-	},
-
-	selectAndSetInitialNwcWallet: async () => {
-		const ndk = ndkStore.state.ndk
-		if (!ndk || !ndk.signer) {
-			console.warn('NDK or signer not available for NWC wallet selection.')
-			return
-		}
-
-		let user: NDKUser | null = null
-		try {
-			user = await ndk.signer.user()
-		} catch (e) {
-			console.error('Error getting user from signer:', e)
-			return
-		}
-
-		if (!user || !user.pubkey) {
-			console.warn('User or user pubkey not available from signer.')
-			return
-		}
-
-		const userPubkey = user.pubkey
-
-		// Set loading state for wallet operations
-		walletStore.setState((state) => ({ ...state, isLoading: true }))
-
-		await walletActions.initialize()
-
-		try {
-			const nostrWallets = await fetchUserNwcWallets(userPubkey)
-			if (nostrWallets && nostrWallets.length > 0) {
-				walletActions.setNostrWallets(nostrWallets as Wallet[])
-			}
-		} catch (error) {
-			console.error('Failed to fetch or merge Nostr NWC wallets during initial setup:', error)
-		}
-
-		const allWallets = walletActions.getWallets()
-
-		if (allWallets.length === 0) {
-			ndkActions.setActiveNwcWalletUri(null)
-			// Clear loading state when done
-			walletStore.setState((state) => ({ ...state, isLoading: false }))
-			return
-		}
-
-		let highestBalance = -1
-		let bestWallet: Wallet | null = null
-
-		const balancePromises = allWallets
-			.filter((wallet) => wallet.nwcUri)
-			.map(async (wallet) => {
-				try {
-					const balanceInfo = await fetchNwcWalletBalance(wallet.nwcUri)
-					const currentBalance = balanceInfo?.balance ?? -1
-					return { ...wallet, balance: currentBalance }
-				} catch (error) {
-					console.error(`Failed to fetch balance for wallet ${wallet.name} (ID: ${wallet.id}):`, error)
-					return { ...wallet, balance: -1 }
-				}
-			})
-
-		const walletsWithBalances = await Promise.all(balancePromises)
-
-		for (const wallet of walletsWithBalances) {
-			if (wallet.balance > highestBalance) {
-				highestBalance = wallet.balance
-				bestWallet = wallet
-			}
-		}
-
-		if (bestWallet && bestWallet.nwcUri) {
-			ndkActions.setActiveNwcWalletUri(bestWallet.nwcUri)
-		} else {
-			ndkActions.setActiveNwcWalletUri(null)
-		}
-
-		// Clear loading state when done
-		walletStore.setState((state) => ({ ...state, isLoading: false }))
 	},
 
 	getNDK: () => {
