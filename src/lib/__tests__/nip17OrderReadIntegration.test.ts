@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import { finalizeEvent, generateSecretKey, getEventHash, getPublicKey, type Event } from 'nostr-tools'
-import { ORDER_GENERAL_KIND, ORDER_PROCESS_KIND, ORDER_STATUS, PAYMENT_RECEIPT_KIND, SHIPPING_STATUS } from '@sdk/commerce/messaging/orderSchema'
+import {
+	ORDER_GENERAL_KIND,
+	ORDER_PROCESS_KIND,
+	ORDER_STATUS,
+	PAYMENT_RECEIPT_KIND,
+	SHIPPING_STATUS,
+} from '@sdk/commerce/messaging/orderSchema'
 import { mergeOrderMessageReads, type LegacyOrderMessageEvent, type OrderMessageReadRecord } from '../orders/nip17OrderReadIntegration'
 import type { UnwrappedNip17OrderMessage } from '../orders/nip17OrderRead'
 import {

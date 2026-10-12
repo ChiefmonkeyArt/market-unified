@@ -66,12 +66,10 @@ export function ProductFormContent({
 
 	const validationIssuesByTab = useMemo(
 		() =>
-			Object.fromEntries(
-				PRODUCT_FORM_TAB_ORDER.map((tab) => [
-					tab,
-					getSellerProductTabValidationIssues(formState, tab),
-				]),
-			) as Record<ProductFormTab, string[]>,
+			Object.fromEntries(PRODUCT_FORM_TAB_ORDER.map((tab) => [tab, getSellerProductTabValidationIssues(formState, tab)])) as Record<
+				ProductFormTab,
+				string[]
+			>,
 		[formState],
 	)
 	const currentTabValidationIssues = validationIssuesByTab[activeTab]

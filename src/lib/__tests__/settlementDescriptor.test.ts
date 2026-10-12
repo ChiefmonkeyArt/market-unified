@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'bun:test'
-import { getSettlementDescriptor, type GetSettlementDescriptorInput, type SettlementParticipantRole } from '@sdk/commerce/auctions/settlementDescriptor'
+import {
+	getSettlementDescriptor,
+	type GetSettlementDescriptorInput,
+	type SettlementParticipantRole,
+} from '@sdk/commerce/auctions/settlementDescriptor'
 import type {
 	ParsedAuctionEvent,
 	ParsedBidEvent,

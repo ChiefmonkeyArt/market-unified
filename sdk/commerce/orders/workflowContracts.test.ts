@@ -220,7 +220,13 @@ describe('resuming a partial multi-seller checkout', () => {
 				publishedEventIds: ['w', 'm', 'p'],
 				paymentRequestFailures: 0,
 			},
-			{ sellerPubkey: 'seller-b', orderId: 'order-b', completedPhases: ['private_delivery'] as const, publishedEventIds: ['w2'], paymentRequestFailures: 0 },
+			{
+				sellerPubkey: 'seller-b',
+				orderId: 'order-b',
+				completedPhases: ['private_delivery'] as const,
+				publishedEventIds: ['w2'],
+				paymentRequestFailures: 0,
+			},
 		].map((entry) => ({ ...entry, completedPhases: [...entry.completedPhases] }))
 		const sequence: string[] = []
 		const outcome = await executeSellerOrderPublishWorkflow(work, makePorts(sequence, { value: false }), { resume })
@@ -230,7 +236,15 @@ describe('resuming a partial multi-seller checkout', () => {
 	})
 
 	test('progress for a different order ID is ignored (no cross-checkout resume)', async () => {
-		const resume = [{ sellerPubkey: 'seller-a', orderId: 'other-order', completedPhases: ['private_delivery' as const], publishedEventIds: ['x'], paymentRequestFailures: 0 }]
+		const resume = [
+			{
+				sellerPubkey: 'seller-a',
+				orderId: 'other-order',
+				completedPhases: ['private_delivery' as const],
+				publishedEventIds: ['x'],
+				paymentRequestFailures: 0,
+			},
+		]
 		const sequence: string[] = []
 		await executeSellerOrderPublishWorkflow(work, makePorts(sequence, { value: false }), { resume })
 		expect(sequence[0]).toBe('wrap:seller-a')

@@ -232,18 +232,19 @@ export async function executeSellerOrderPublishWorkflow<PrivateDelivery, OrderMa
 		if (done(seller, 'order_marker')) {
 			orderIds.push(seller.orderId)
 			if (done(seller, 'payment_request')) continue
-		} else try {
-			const result = await ports.publishOrderMarker(seller)
-			orderIds.push(seller.orderId)
-			progress = recordSellerOrderEventPublished(progress, {
-				sellerPubkey: seller.sellerPubkey,
-				orderId: seller.orderId,
-				phase,
-				eventId: result.eventId,
-			})
-		} catch (error) {
-			return failed(error)
-		}
+		} else
+			try {
+				const result = await ports.publishOrderMarker(seller)
+				orderIds.push(seller.orderId)
+				progress = recordSellerOrderEventPublished(progress, {
+					sellerPubkey: seller.sellerPubkey,
+					orderId: seller.orderId,
+					phase,
+					eventId: result.eventId,
+				})
+			} catch (error) {
+				return failed(error)
+			}
 
 		phase = 'payment_request'
 		try {

@@ -116,7 +116,9 @@ export function useAuctionWinMonitor() {
 						.map((result) => result.value)
 					const parsedVerdicts = verdictEvents
 						.map((verdict) => parseValidatorVerdictEvent(toRawEvent(verdict)))
-						.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => result.ok)
+						.filter(
+							(result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => result.ok,
+						)
 						.map((result) => result.value)
 					const parsedPathReleases = pathReleaseEvents
 						.map((release) => parsePathReleaseEvent(toRawEvent(release)))

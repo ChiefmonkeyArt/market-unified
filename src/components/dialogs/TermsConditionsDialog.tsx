@@ -191,4 +191,3 @@ export function TermsConditionsDialog({ open, onOpenChange, onAccept }: TermsCon
 		</Dialog>
 	)
 }
-

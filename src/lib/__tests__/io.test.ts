@@ -12,7 +12,7 @@ import { finalizeEvent, generateSecretKey } from 'nostr-tools/pure'
 // store/actions per case (e.g. flip ndk on/off, return a present user).
 // Real signed events: the applesauce adapter drops anything whose signature does not verify.
 const stubSecretKey = generateSecretKey()
-const plain = <T,>(e: T): T => JSON.parse(JSON.stringify(e)) // drop nostr-tools' cached [verified] symbol
+const plain = <T>(e: T): T => JSON.parse(JSON.stringify(e)) // drop nostr-tools' cached [verified] symbol
 const stubRawEvent = plain(finalizeEvent({ created_at: 1, kind: 1, tags: [], content: 'hello' }, stubSecretKey))
 const stubRawEvent2 = plain(finalizeEvent({ created_at: 2, kind: 1, tags: [], content: 'hello again' }, stubSecretKey))
 const forgedRawEvent = { ...stubRawEvent, content: 'tampered' } // id/sig no longer match

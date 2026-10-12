@@ -1,6 +1,12 @@
 import { describe, expect, test } from 'bun:test'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import type { MinBidCurve, ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '@sdk/commerce/auctions/events'
+import type {
+	MinBidCurve,
+	ParsedAuctionEvent,
+	ParsedBidEvent,
+	ParsedPathReleaseEvent,
+	ParsedSettlementEvent,
+} from '@sdk/commerce/auctions/events'
 import { checkMintReachability, checkProofState, checkProofStateBatch } from '@sdk/commerce/payments/cashu/nut7'
 import {
 	aggregateProofStates,
