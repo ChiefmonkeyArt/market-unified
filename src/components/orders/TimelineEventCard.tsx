@@ -2,11 +2,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { copyToClipboard } from '@/lib/utils'
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
+import type { NostrEventLike } from '@sdk/core'
 import { CheckCircle, Copy } from 'lucide-react'
 
 interface TimelineEventCardProps {
-	event: NDKEvent
+	event: NostrEventLike
 	title: string
 	icon: React.ReactNode
 	type: string

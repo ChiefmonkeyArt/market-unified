@@ -1,0 +1,39 @@
+name: Typecheck ratchet and deploy-package smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bun run generate-routes
+      - run: bash scripts/check-tsc-ratchet.sh
+
+  package-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go install github.com/fiatjaf/nak@latest
+      - run: bun install --frozen-lockfile
+      - run: bun run generate-routes
+      - run: NAK="$HOME/go/bin/nak" bash scripts/package/smoke.sh
