@@ -184,16 +184,8 @@ echo "📦 Preparing deployment package..."
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf $TEMP_DIR" EXIT
 
-# dist/ - pre-built static files (served by Caddy)
-cp -r "$PROJECT_DIR/dist" "$TEMP_DIR/"
-# src/ - server code for API (run by Bun/PM2)
-cp -r "$PROJECT_DIR/src" "$TEMP_DIR/"
-# contextvm/ - ContextVM server code (run by Bun/PM2)
-cp -r "$PROJECT_DIR/contextvm" "$TEMP_DIR/"
-# Dependencies
-cp "$PROJECT_DIR/package.json" "$TEMP_DIR/"
-cp "$PROJECT_DIR/bun.lock" "$TEMP_DIR/"
-cp "$PROJECT_DIR/tsconfig.json" "$TEMP_DIR/"
+# Package contents come from one list: scripts/package/files.txt
+bash "$PROJECT_DIR/scripts/package/make.sh" "$PROJECT_DIR" "$TEMP_DIR"
 
 # Generate stage-specific ecosystem config
 cat > "$TEMP_DIR/ecosystem.config.cjs" << EOF

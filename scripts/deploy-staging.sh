@@ -24,12 +24,7 @@ DEPLOY_DIR="deploy-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$DEPLOY_DIR"
 
 # Copy necessary files
-cp -r dist/ "$DEPLOY_DIR/"
-cp -r public/ "$DEPLOY_DIR/"
-cp -r src/ "$DEPLOY_DIR/"
-cp package.json "$DEPLOY_DIR/"
-cp bun.lock "$DEPLOY_DIR/"
-cp tsconfig.json "$DEPLOY_DIR/"
+bash scripts/package/make.sh . "$DEPLOY_DIR"
 
 # Create staging-specific package.json script
 cat > "$DEPLOY_DIR/package-staging.json" << 'EOF'

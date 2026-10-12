@@ -6,7 +6,7 @@ export type SellerProductFormValidationState = ProductPriceFormState & {
 	name: string
 	description: string
 	quantity: string
-	mainCategory: string
+	mainCategory: string | null
 	images: unknown[]
 	shippings: ProductShippingSelection[]
 }

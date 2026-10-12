@@ -9,6 +9,9 @@
 		"allowImportingTsExtensions": true,
 		"verbatimModuleSyntax": true,
 		"noEmit": true,
+		"skipLibCheck": true,
+		"target": "ESNext",
+		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"paths": {
 			"@/*": ["./src/*"],
 			"@sdk/*": ["./sdk/*"],

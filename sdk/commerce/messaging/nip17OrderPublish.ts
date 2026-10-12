@@ -74,6 +74,7 @@ export async function publishNip17OrderMessage(params: PublishNip17OrderMessageP
 		publishGiftWrap: params.publishGiftWrap,
 	})
 
+	if (!wraps.rumor.id) throw new Error('NIP-17 order rumor is missing its id')
 	return {
 		rumorId: wraps.rumor.id,
 		recipientGiftWrapId: wraps.recipient.giftWrap.id,

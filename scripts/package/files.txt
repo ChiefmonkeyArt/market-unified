@@ -1,0 +1,15 @@
+# Single source of truth for what a runtime deploy package contains.
+# Every deploy path (deploy-simple/deploy.sh, scripts/deploy-staging.sh, CI smoke test)
+# reads this list. Add a top-level source folder here or it will not ship.
+dist
+public
+src
+sdk
+ui
+platform
+contextvm
+package.json
+bun.lock
+tsconfig.json
+bunfig.toml
+styles

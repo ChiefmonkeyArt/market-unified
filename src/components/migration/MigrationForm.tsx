@@ -314,6 +314,7 @@ export function MigrationForm({ nip15Event, onBack, onSuccess }: MigrationFormPr
 				shippings: formData.shippings,
 				weight: formData.weight,
 				dimensions: formData.dimensions,
+				isNSFW: false,
 			}
 
 			const newProductId = await publishMigratedProduct(productFormData, nip15Event.id, signer, ndk, handleProgress)

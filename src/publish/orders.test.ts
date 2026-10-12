@@ -453,7 +453,7 @@ describe('public order privacy guard', () => {
 		})
 		if (outcome.status === 'failed') {
 			expect(outcome.progress).toHaveLength(1)
-			expect(outcome.progress[0]?.orderId).toBe(outcome.failedOrderId)
+			expect(outcome.progress[0]?.orderId).toBe(outcome.failedOrderId as string)
 		}
 		expect(publishedEvents).toHaveLength(0)
 	})

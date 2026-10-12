@@ -16,6 +16,7 @@ import {
 	getFirstBlockingSellerProductTab,
 	getSellerProductFormValidationIssues,
 	getSellerProductTabValidationIssues,
+	SELLER_PRODUCT_FORM_TAB_ORDER as PRODUCT_FORM_TAB_ORDER,
 	type ProductWorkflowResolution,
 } from '@sdk/commerce/products'
 import { useForm } from '@tanstack/react-form'
@@ -66,7 +67,7 @@ export function ProductFormContent({
 	const validationIssuesByTab = useMemo(
 		() =>
 			Object.fromEntries(
-				(['name', 'detail', 'spec', 'category', 'images', 'shipping'] as const).map((tab) => [
+				PRODUCT_FORM_TAB_ORDER.map((tab) => [
 					tab,
 					getSellerProductTabValidationIssues(formState, tab),
 				]),
@@ -259,7 +260,7 @@ export function ProductFormContent({
 		[activeTab, editingProductId, formState],
 	)
 
-	const previousTab = getAdjacentTab(activeTab, 'previous')
+	const previousTab = getAdjacentSellerProductTab(activeTab, 'previous')
 	const isCurrentTabBlocked = currentTabValidationIssues.length > 0
 	const footerValidationIssues = activeTab === 'shipping' || editingProductId ? formValidationIssues : currentTabValidationIssues
 
