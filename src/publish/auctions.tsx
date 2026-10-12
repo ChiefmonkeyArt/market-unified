@@ -6,19 +6,19 @@ import {
 	getAuctionTagValue,
 } from '@/lib/auctionSettlement'
 import { AUCTION_MIN_DURATION_SECONDS, validateAuctionPublishInput } from '@/lib/auctionPublishValidation'
-import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@/lib/schemas/order'
+import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
 import { configStore } from '@/lib/stores/config'
 import { nip60Actions, type AuctionP2pkKeyScheme, AuctionBidLockMutationPossibleError } from '@/lib/stores/nip60'
 import type { ProductShippingSelectionInput } from '@sdk/commerce/products'
 import { getBidAmount, getBidStatus, markAuctionAsDeleted } from '@/queries/auctions'
-import { isStructurallyValidSettledSettlement } from '@/lib/auction/events'
-import { toRawEvent, type NostrEventLike } from '@/lib/nostr/eventLike'
-import { evaluateReserveNotMetGuard, resolveReserveNotMetPublish } from '@/lib/auction/reserveGuard'
+import { isStructurallyValidSettledSettlement } from '@sdk/commerce/auctions/events'
+import { toRawEvent, type NostrEventLike } from '@sdk/core/nostr/eventLike'
+import { evaluateReserveNotMetGuard, resolveReserveNotMetPublish } from '@sdk/commerce/auctions/reserveGuard'
 import { generateAuctionDerivationPath } from '@/lib/auctionPathOracle'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '@/lib/auctionP2pk'
-import { hashToCurveHexFromString } from '@/lib/cashu/hashToCurve'
-import { buildDleqProofs, fetchDleqKeysetsForBidsDetailed } from '@/lib/cashu/dleq'
-import { buildBidEventTags, buildPathReleaseTags } from '@/lib/auction/tagBuilders'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
+import { buildDleqProofs, fetchDleqKeysetsForBidsDetailed } from '@sdk/commerce/payments/cashu/dleq'
+import { buildBidEventTags, buildPathReleaseTags } from '@sdk/commerce/auctions/tagBuilders'
 import {
 	buildAuctionClaimPublicMarkerTags,
 	createPrivateAuctionClaimMessageForActiveSigner,
@@ -39,9 +39,9 @@ import {
 	AUCTION_PATH_RELEASE_KIND,
 	type PathReleaseReason,
 	type Nut7ProofState,
-} from '@/lib/auction/constants'
-import { assertAuctionMintsSupportDleq } from '@/lib/auction/validation'
-import { preflightAuctionSettlementP2pkChain } from '@/lib/auctionSettlementP2pk'
+} from '@sdk/commerce/auctions/constants'
+import { assertAuctionMintsSupportDleq } from '@sdk/commerce/auctions/validation'
+import { preflightAuctionSettlementP2pkChain } from '@sdk/commerce/auctions/auctionSettlementP2pk'
 import { getEncodedToken, getDecodedToken, type MintKeyset, type Proof } from '@cashu/cashu-ts'
 import { getPublicKey } from '@noble/secp256k1'
 import { auctionKeys, orderKeys } from '@/queries/queryKeyFactory'
@@ -1287,7 +1287,7 @@ export const publishBidderPathRelease = async (input: PublishBidderPathReleaseIn
 			import('@/lib/schemas/auction/bidEvent'),
 			import('@/lib/schemas/auction/settlementEvents'),
 			import('@/lib/schemas/auction/validatorEvents'),
-			import('@/lib/auction/bidValidation'),
+			import('@sdk/commerce/auctions/bidValidation'),
 		])
 		const auctionEvent = await fetchAuction(latestLeg.auctionRootEventId, true)
 		if (!auctionEvent) throw new Error('Auction no longer exists')
@@ -1305,11 +1305,11 @@ export const publishBidderPathRelease = async (input: PublishBidderPathReleaseIn
 		])
 		const parsedBids = bidEvents
 			.map((event) => parseBidEvent(toRawEvent(event)))
-			.filter((result): result is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => result.ok)
+			.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => result.ok)
 			.map((result) => result.value)
 		const parsedVerdicts = verdictEvents
 			.map((event) => parseValidatorVerdictEvent(toRawEvent(event)))
-			.filter((result): result is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => result.ok)
+			.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => result.ok)
 			.map((result) => result.value)
 		// ADR-0011 review R2: thread the DLEQ keysets here too. DLEQ is
 		// unconditional, so without evidence `computeValidatedBids` classifies
@@ -1372,7 +1372,7 @@ export const publishBidderPathRelease = async (input: PublishBidderPathReleaseIn
 		)
 		const parsedVerdicts = verdictEvents
 			.map((v) => parseValidatorVerdictEvent(toRawEvent(v)))
-			.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => r.ok)
+			.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => r.ok)
 			.map((r) => r.value)
 			.filter((v) => v.bidEventId === input.bidEventId && v.claim === 'won_pending_settlement')
 
@@ -1558,12 +1558,12 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 		import('@/queries/auctions'),
 		import('@/lib/auctionSettlement'),
 		import('@/lib/schemas/auction/settlementEvents'),
-		import('@/lib/auction/constants'),
+		import('@sdk/commerce/auctions/constants'),
 		import('@/lib/schemas/auction/auctionEvent'),
 		import('@/lib/schemas/auction/bidEvent'),
 		import('@/lib/schemas/auction/validatorEvents'),
-		import('@/lib/auction/bidValidation'),
-		import('@/lib/cashu/nut7'),
+		import('@sdk/commerce/auctions/bidValidation'),
+		import('@sdk/commerce/payments/cashu/nut7'),
 	])
 	const { getAuctionTagValue: getTag, AUCTION_SETTLEMENT_KIND: kind1024 } = auctionSettlementMod
 	const { parsePathReleaseEvent, parseSettlementEvent } = settlementEventsMod
@@ -1618,8 +1618,8 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 	// win (validateBid rejects them via the mint-allowlist check), and polling
 	// attacker-supplied mint URLs from raw bids would turn the client into a
 	// beacon. Unreachable mints leave their bids 'unknown' → pending.
-	type ParsedBidEventT = import('@/lib/auction/events').ParsedBidEvent
-	type Nut7ProofStateT = import('@/lib/auction/constants').Nut7ProofState
+	type ParsedBidEventT = import('@sdk/commerce/auctions/events').ParsedBidEvent
+	type Nut7ProofStateT = import('@sdk/commerce/auctions/constants').Nut7ProofState
 	const fetchNut7StatesForBids = async (bidList: ParsedBidEventT[]): Promise<Map<string, Nut7ProofStateT>> => {
 		const states = new Map<string, Nut7ProofStateT>()
 		const byMint = new Map<string, ParsedBidEventT[]>()
@@ -1655,11 +1655,11 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 		])
 		const rnmParsedBids = rnmBids
 			.map((b) => parseBidEvent(toRawEvent(b)))
-			.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => r.ok)
+			.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => r.ok)
 			.map((r) => r.value)
 		const rnmParsedVerdicts = rnmVerdicts
 			.map((v) => parseValidatorVerdictEvent(toRawEvent(v)))
-			.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => r.ok)
+			.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => r.ok)
 			.map((r) => r.value)
 
 		const rnmNut7States = await fetchNut7StatesForBids(rnmParsedBids)
@@ -1714,7 +1714,7 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 		const template: EventTemplate = {
 			kind: AUCTION_SETTLEMENT_KIND,
 			content: '',
-			tags: (await import('@/lib/auction/tagBuilders')).buildSettlementTags({
+			tags: (await import('@sdk/commerce/auctions/tagBuilders')).buildSettlementTags({
 				auctionRootEventId,
 				auctionCoordinate,
 				status: 'reserve_not_met',
@@ -1743,11 +1743,11 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 
 	const parsedBids = bids
 		.map((b) => parseBidEvent(toRawEvent(b)))
-		.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => r.ok)
+		.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => r.ok)
 		.map((r) => r.value)
 	const parsedVerdicts = verdictEvents
 		.map((v) => parseValidatorVerdictEvent(toRawEvent(v)))
-		.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => r.ok)
+		.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => r.ok)
 		.map((r) => r.value)
 
 	const nut7States = await fetchNut7StatesForBids(parsedBids)
@@ -1827,7 +1827,7 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 	// with skipNut7Check) because publishing a settlement is irreversible.
 	const parsedChainBids = chainBids
 		.map((b) => parseBidEvent(b))
-		.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => r.ok)
+		.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => r.ok)
 		.map((r) => r.value)
 	if (parsedChainBids.length !== chainBids.length) {
 		throw new Error(
@@ -2110,7 +2110,7 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 	const template: EventTemplate = {
 		kind: kind1024,
 		content: '',
-		tags: (await import('@/lib/auction/tagBuilders')).buildSettlementTags({
+		tags: (await import('@sdk/commerce/auctions/tagBuilders')).buildSettlementTags({
 			auctionRootEventId,
 			auctionCoordinate,
 			status: 'settled',

@@ -8,7 +8,7 @@ import {
 	normalizeAuctionP2pkPubkey,
 	toCompressedAuctionP2pkPubkey,
 	verifyAuctionPathGrant,
-} from '@/lib/auctionP2pk'
+} from '@sdk/commerce/auctions/auctionP2pk'
 
 const toHex = (bytes: Uint8Array): string =>
 	Array.from(bytes)

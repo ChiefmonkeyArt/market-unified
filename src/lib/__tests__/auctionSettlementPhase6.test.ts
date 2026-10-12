@@ -21,11 +21,11 @@
  */
 
 import { describe, expect, test } from 'bun:test'
-import { AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '../auction/constants'
-import { buildPathReleaseTags, buildSettlementTags } from '../auction/tagBuilders'
-import type { NostrEventLike } from '../nostr/eventLike'
+import { AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '@sdk/commerce/auctions/constants'
+import { buildPathReleaseTags, buildSettlementTags } from '@sdk/commerce/auctions/tagBuilders'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { parsePathReleaseEvent, parseSettlementEvent } from '../schemas/auction/settlementEvents'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '../auctionP2pk'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 
 const REAL_AUCTION_XPUB = 'xpub6CUGRUonZSQ4TWtTMmzXdrXDtypWKiKrhko4egpiMZbpiaQL2jkwSB1icqYh2cfDfVxdx4df189oLKnC5fSwqPfgyP3hooxujYzAu3fDVmz'
 

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import type { MinBidCurve, ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '../auction/events'
-import { checkMintReachability, checkProofState, checkProofStateBatch } from '../cashu/nut7'
+import type { MinBidCurve, ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '@sdk/commerce/auctions/events'
+import { checkMintReachability, checkProofState, checkProofStateBatch } from '@sdk/commerce/payments/cashu/nut7'
 import {
 	aggregateProofStates,
 	collectLiveBids,
@@ -444,9 +444,9 @@ describe('auction validator release observed-time binding', () => {
 })
 
 describe('aggregateProofStates — all-spent semantics', () => {
-	const snap = (state: import('../auction/constants').Nut7ProofState) => ({ state, observedAt: 1 })
-	const mk = (entries: Array<[string, import('../auction/constants').Nut7ProofState]>) => {
-		const m = new Map<string, { state: import('../auction/constants').Nut7ProofState; observedAt: number }>()
+	const snap = (state: import('@sdk/commerce/auctions/constants').Nut7ProofState) => ({ state, observedAt: 1 })
+	const mk = (entries: Array<[string, import('@sdk/commerce/auctions/constants').Nut7ProofState]>) => {
+		const m = new Map<string, { state: import('@sdk/commerce/auctions/constants').Nut7ProofState; observedAt: number }>()
 		for (const [y, s] of entries) m.set(y, snap(s))
 		return m
 	}

@@ -1,4 +1,4 @@
-import { getEventAddress } from '@/lib/nostr/eventLike'
+import { getEventAddress } from '@sdk/core/nostr/eventLike'
 import { ndkActions } from '@/lib/stores/ndk'
 import { reactionKeys } from './queryKeyFactory'
 import { queryOptions, useQuery } from '@tanstack/react-query'

@@ -15,13 +15,13 @@
  * depends on is pinned end-to-end at the pure layer.
  */
 import { describe, expect, test } from 'bun:test'
-import type { NostrEventLike } from '../nostr/eventLike'
-import { computeValidatedBids } from '../auction/bidValidation'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent, MinBidCurve } from '../auction/events'
-import type { Nut7ProofState } from '../auction/constants'
-import { hashToCurveHexFromString } from '../cashu/hashToCurve'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
+import { computeValidatedBids } from '@sdk/commerce/auctions/bidValidation'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent, MinBidCurve } from '@sdk/commerce/auctions/events'
+import type { Nut7ProofState } from '@sdk/commerce/auctions/constants'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 import { makeDleqKeyset, makeHonestDleqProof } from '../cashu/dleqFixture'
-import { evaluateReserveNotMetGuard, resolveReserveNotMetPublish } from '../auction/reserveGuard'
+import { evaluateReserveNotMetGuard, resolveReserveNotMetPublish } from '@sdk/commerce/auctions/reserveGuard'
 import type { MintKeys } from '@cashu/cashu-ts'
 
 const SELLER_PK = 'a'.repeat(64)

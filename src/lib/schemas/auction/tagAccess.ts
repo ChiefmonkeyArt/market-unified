@@ -21,7 +21,7 @@
  *   issues, not via thrown access errors.
  */
 
-import type { NostrEventLike } from '../../nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 
 /**
  * Read the first value (`tag[1]`) for the named tag. `undefined` when

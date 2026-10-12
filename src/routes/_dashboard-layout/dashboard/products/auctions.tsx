@@ -31,7 +31,7 @@ import {
 } from '@/queries/auctions'
 import { useComments } from '@/queries/comments'
 import { useLiveActivity, useLiveChatMessages } from '@/queries/liveChat'
-import { AUCTION_KIND } from '@/lib/auction/constants'
+import { AUCTION_KIND } from '@sdk/commerce/auctions/constants'
 import { getOrderId } from '@/queries/orders'
 import { useProfileName } from '@/queries/profiles'
 import type { NDKEvent } from '@/lib/nostr/ndk-events'

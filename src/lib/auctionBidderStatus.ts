@@ -5,8 +5,8 @@ import {
 	type AuctionBidChainGroup,
 } from '@/lib/auctionSettlement'
 import type { NDKEvent } from '@/lib/nostr/ndk-events'
-import type { ValidatedBidSet } from '@/lib/auction/bidValidation'
-import { getValidatedBidderState } from '@/lib/auction/validatedBidView'
+import type { ValidatedBidSet } from '@sdk/commerce/auctions/bidValidation'
+import { getValidatedBidderState } from '@sdk/commerce/auctions/validatedBidView'
 
 export type AuctionBidderStatusKind = 'winning' | 'outbid' | 'won' | 'was_outbid'
 

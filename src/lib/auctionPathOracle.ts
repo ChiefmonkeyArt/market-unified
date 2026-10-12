@@ -10,7 +10,7 @@
  * entropy requirement.
  */
 
-import { AUCTION_PATH_HD_DEPTH, AUCTION_PATH_HD_MAX_INDEX } from './auction/constants'
+import { AUCTION_PATH_HD_DEPTH, AUCTION_PATH_HD_MAX_INDEX } from '@sdk/commerce/auctions/constants'
 
 const getRandomNonHardenedIndex = (): number => {
 	if (globalThis.crypto?.getRandomValues) {

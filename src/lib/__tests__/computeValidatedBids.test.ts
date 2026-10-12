@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
-import { computeValidatedBids, validateBidChainNut7PrePublish } from '../auction/bidValidation'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent, MinBidCurve } from '../auction/events'
-import type { Nut7ProofState } from '../auction/constants'
-import { hashToCurveHexFromString } from '../cashu/hashToCurve'
+import { computeValidatedBids, validateBidChainNut7PrePublish } from '@sdk/commerce/auctions/bidValidation'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent, MinBidCurve } from '@sdk/commerce/auctions/events'
+import type { Nut7ProofState } from '@sdk/commerce/auctions/constants'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 import { makeDleqKeyset as makeFixtureKeyset, makeHonestDleqProof } from '../cashu/dleqFixture'
-import { fetchDleqKeysetsForBidsDetailed, verifyBidDleqWithKeysets, type DleqKeysetFetcher } from '../cashu/dleq'
+import { fetchDleqKeysetsForBidsDetailed, verifyBidDleqWithKeysets, type DleqKeysetFetcher } from '@sdk/commerce/payments/cashu/dleq'
 import type { MintKeys } from '@cashu/cashu-ts'
 import { parseBidEvent } from '../schemas/auction/bidEvent'
-import type { NostrEventLike } from '../nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 
 // =============================================================================
 // computeValidatedBids — quorum eligibility, NUT-7 truthfulness, and

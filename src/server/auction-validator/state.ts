@@ -20,9 +20,9 @@
  * No DB. No persistence. Memory-only.
  */
 
-import type { Nut7ProofState, ValidatorClaim, ValidatorReason } from '../../lib/auction/constants'
-import { auctionImmutableFieldsMatch } from '../../lib/auction/immutability'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '../../lib/auction/events'
+import type { Nut7ProofState, ValidatorClaim, ValidatorReason } from '@sdk/commerce/auctions/constants'
+import { auctionImmutableFieldsMatch } from '@sdk/commerce/auctions/immutability'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '@sdk/commerce/auctions/events'
 import { createBidSpamState, type BidSpamState } from './spamPolicy'
 
 // ============================================================================

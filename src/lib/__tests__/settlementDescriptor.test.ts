@@ -1,16 +1,16 @@
 import { describe, expect, test } from 'bun:test'
-import { getSettlementDescriptor, type GetSettlementDescriptorInput, type SettlementParticipantRole } from '../auction/settlementDescriptor'
+import { getSettlementDescriptor, type GetSettlementDescriptorInput, type SettlementParticipantRole } from '@sdk/commerce/auctions/settlementDescriptor'
 import type {
 	ParsedAuctionEvent,
 	ParsedBidEvent,
 	ParsedPathReleaseEvent,
 	ParsedSettlementEvent,
 	ParsedValidatorVerdictEvent,
-} from '../auction/events'
-import type { Nut7ProofState } from '../auction/constants'
-import type { NostrEventLike } from '../nostr/eventLike'
-import { hashToCurveHexFromString } from '../cashu/hashToCurve'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '../auctionP2pk'
+} from '@sdk/commerce/auctions/events'
+import type { Nut7ProofState } from '@sdk/commerce/auctions/constants'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 import { ProjectivePoint, etc } from '@noble/secp256k1'
 import { HDKey } from '@scure/bip32'
 import { getEncodedToken, type Proof, type MintKeys, type MintKeyset } from '@cashu/cashu-ts'

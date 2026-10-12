@@ -3,7 +3,7 @@ import { Media } from '@/components/Media'
 import { InvalidAuctionNotice } from '@/components/InvalidAuctionNotice'
 import { TestListingNotice } from '@/components/TestListingNotice'
 import { TestLabelButton } from '@/components/dashboard/TestLabelButton'
-import { AUCTION_KIND } from '@/lib/auction/constants'
+import { AUCTION_KIND } from '@sdk/commerce/auctions/constants'
 import { getItemTestLabelCoordinate } from '@/lib/utils/testLabelFilters'
 import { AuctionCountdown, useAuctionCountdown } from '@/components/AuctionCountdown'
 import { AuctionVerdictPanel } from '@/components/AuctionVerdictPanel'
@@ -23,12 +23,12 @@ import { usePublishAuctionSettlementMutation } from '@/publish/auctions'
 import { parseAuctionEvent } from '@/lib/schemas/auction/auctionEvent'
 import { parseBidEvent } from '@/lib/schemas/auction/bidEvent'
 import { parseValidatorVerdictEvent } from '@/lib/schemas/auction/validatorEvents'
-import { isStructurallyValidSettledSettlement } from '@/lib/auction/events'
-import { toRawEvent } from '@/lib/nostr/eventLike'
+import { isStructurallyValidSettledSettlement } from '@sdk/commerce/auctions/events'
+import { toRawEvent } from '@sdk/core/nostr/eventLike'
 import { useNut7Polling } from '@/lib/auction/useNut7Polling'
 import { useDleqKeysetPolling } from '@/lib/auction/useDleqKeysetPolling'
 import { parseSettlementEvent } from '@/lib/schemas/auction/settlementEvents'
-import { computeValidatedBids } from '@/lib/auction/bidValidation'
+import { computeValidatedBids } from '@sdk/commerce/auctions/bidValidation'
 import { auctionKeys } from '@/queries/queryKeyFactory'
 import { useQueryClient } from '@tanstack/react-query'
 import {
@@ -272,7 +272,7 @@ function DashboardAuctionDetailRoute() {
 		() =>
 			bids
 				.map((b) => parseBidEvent(toRawEvent(b)))
-				.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => r.ok)
+				.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => r.ok)
 				.map((r) => r.value),
 		[bids],
 	)
@@ -310,7 +310,7 @@ function DashboardAuctionDetailRoute() {
 		if (!parsedAuctionResult.ok) return null
 		const parsedVerdicts = verdictsData
 			.map((v) => parseValidatorVerdictEvent(toRawEvent(v)))
-			.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => r.ok)
+			.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => r.ok)
 			.map((r) => r.value)
 		return computeValidatedBids({
 			auction: parsedAuctionResult.value,
@@ -354,7 +354,7 @@ function DashboardAuctionDetailRoute() {
 		// Parse verdicts.
 		const parsedVerdicts = verdictsData
 			.map((v) => parseValidatorVerdictEvent(toRawEvent(v)))
-			.filter((r): r is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => r.ok)
+			.filter((r): r is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => r.ok)
 			.map((r) => r.value)
 
 		// Settlement-aware NUT-7 spend masking (#11): `spent` is fraud before the
@@ -388,7 +388,7 @@ function DashboardAuctionDetailRoute() {
 		// Parse + validate each settlement.
 		const validSettlements: Array<{
 			ndkEvent: (typeof settlements)[0]
-			parsed: import('@/lib/auction/events').ParsedSettlementEvent
+			parsed: import('@sdk/commerce/auctions/events').ParsedSettlementEvent
 			status: string
 		}> = []
 		for (const s of settlements) {

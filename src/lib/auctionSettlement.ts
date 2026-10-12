@@ -1,4 +1,4 @@
-import type { NostrEventLike } from './nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import {
 	AUCTION_BID_KIND,
 	AUCTION_KIND,
@@ -6,8 +6,8 @@ import {
 	AUCTION_SETTLEMENT_KIND,
 	AUCTION_SETTLEMENT_POLICY,
 	ACTIVE_AUCTION_BID_STATUSES,
-} from './auction/constants'
-import { auctionImmutableFieldsMatch as compareAuctionImmutableFields } from './auction/immutability'
+} from '@sdk/commerce/auctions/constants'
+import { auctionImmutableFieldsMatch as compareAuctionImmutableFields } from '@sdk/commerce/auctions/immutability'
 
 // Re-export the constants that used to live here so downstream callers
 // don't have to chase the move. The canonical definitions are in

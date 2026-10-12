@@ -43,7 +43,7 @@
 
 import type { ApplesauceRelayPool } from '@contextvm/sdk'
 import type { NostrEvent } from 'nostr-tools'
-import { VALIDATOR_VERDICT_KIND } from '../../lib/auction/constants'
+import { VALIDATOR_VERDICT_KIND } from '@sdk/commerce/auctions/constants'
 
 /** Look-back window for the validator's own prior verdicts (30 days, matching the subscriber). */
 export const RECOVERY_LOOKBACK_SECONDS = 60 * 60 * 24 * 30

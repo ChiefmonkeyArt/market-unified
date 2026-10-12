@@ -4,7 +4,7 @@ import { finalizeEvent, generateSecretKey, getPublicKey, nip44, type Event } fro
 import { createNip17GiftWrapsWithSigner } from '../nostr/nip17'
 import { NIP59_GIFT_WRAP_KIND } from '../nostr/nip59'
 import { unwrapNip17OrderMessage, unwrapNip17OrderMessages } from '../orders/nip17OrderRead'
-import { createOrderCreationRumor, createPaymentReceiptRumor } from '../orders/orderMessageRumor'
+import { createOrderCreationRumor, createPaymentReceiptRumor } from '@sdk/commerce/messaging/orderMessageRumor'
 
 function createSigner(privateKey: Uint8Array): NDKSigner {
 	const pubkey = getPublicKey(privateKey)

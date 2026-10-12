@@ -1,14 +1,14 @@
 import { describe, expect, test } from 'bun:test'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import type { ValidatedBidSet } from '../auction/bidValidation'
-import type { ParsedBidEvent } from '../auction/events'
+import type { ValidatedBidSet } from '@sdk/commerce/auctions/bidValidation'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
 import {
 	getValidatedTopAmount,
 	getValidatedTopBidderPubkey,
 	getValidatedBidderState,
 	isBidValidated,
 	getBidClassification,
-} from '../auction/validatedBidView'
+} from '@sdk/commerce/auctions/validatedBidView'
 
 // =============================================================================
 // validatedBidView — pure selectors over a ValidatedBidSet

@@ -2,9 +2,9 @@ import type { NDKSigner } from '@nostr-dev-kit/ndk'
 import { describe, expect, test } from 'bun:test'
 import { finalizeEvent, generateSecretKey, getPublicKey, nip44, type Event } from 'nostr-tools'
 import { NIP59_GIFT_WRAP_KIND } from '../nostr/nip59'
-import { NIP17_DM_RELAY_LIST_KIND, type Nip17DmRelayListEvent } from '../nostr/nip17Relays'
+import { NIP17_DM_RELAY_LIST_KIND, type Nip17DmRelayListEvent } from '@sdk/core/nostr/nip17Relays'
 import { publishNip17OrderMessage } from '../orders/nip17OrderPublish'
-import { createOrderCreationRumor } from '../orders/orderMessageRumor'
+import { createOrderCreationRumor } from '@sdk/commerce/messaging/orderMessageRumor'
 
 type PublishCall = {
 	target: 'recipient' | 'sender'

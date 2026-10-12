@@ -1,4 +1,4 @@
-import { checkMintReachability, type CheckProofStateOptions } from '../../lib/cashu/nut7'
+import { checkMintReachability, type CheckProofStateOptions } from '@sdk/commerce/payments/cashu/nut7'
 import { checkMintProbeDestination, createPolicyEnforcedRequest } from './mintDestination'
 import { setAuctionMintReachability, type ValidatorAuctionState } from './state'
 

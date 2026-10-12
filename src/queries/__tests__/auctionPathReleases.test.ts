@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { AUCTION_PATH_RELEASE_KIND } from '@/lib/auction/constants'
+import { AUCTION_PATH_RELEASE_KIND } from '@sdk/commerce/auctions/constants'
 import type { NostrEvent, NostrFilter } from '@/lib/nostr/io'
 
 type RelayEvent = NostrEvent

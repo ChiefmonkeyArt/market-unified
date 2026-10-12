@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import type { CashuMint } from '@cashu/cashu-ts'
-import { mintSupportsDleq } from '../cashu/mintCapability'
+import { mintSupportsDleq } from '@sdk/commerce/payments/cashu/mintCapability'
 
 /**
  * Mint NUT-12 DLEQ capability probe — ADR-0011 Decision 4/5 (D1).

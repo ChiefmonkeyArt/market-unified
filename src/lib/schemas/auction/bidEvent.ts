@@ -22,9 +22,9 @@
  */
 
 import { z } from 'zod'
-import { AUCTION_BID_KIND, AUCTION_KEY_SCHEME } from '../../auction/constants'
-import type { ParsedBidEvent } from '../../auction/events'
-import type { NostrEventLike } from '../../nostr/eventLike'
+import { AUCTION_BID_KIND, AUCTION_KEY_SCHEME } from '@sdk/commerce/auctions/constants'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { addressableCoordinate, compressedPubkeyHex, nostrEventIdHex, nostrPubkeyHex, positiveInt, unixSeconds } from './common'
 import { readMultiTag, readSingleTag } from './tagAccess'
 

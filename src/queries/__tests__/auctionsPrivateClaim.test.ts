@@ -11,8 +11,8 @@ import { afterEach, describe, expect, test } from 'bun:test'
 
 import { applesauceIo } from '@/lib/nostr/io'
 import { AUCTION_CLAIM_SUBJECT } from '@/lib/auctions/privateAuctionClaimMessage'
-import { ORDER_MESSAGE_TYPE } from '@/lib/schemas/order'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import { ORDER_MESSAGE_TYPE } from '@sdk/commerce/messaging/orderSchema'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { fetchPrivateAuctionClaimForMarker } from '../auctions'
 
 const SELLER_PK = 'a'.repeat(64)

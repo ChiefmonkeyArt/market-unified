@@ -7,7 +7,7 @@ import {
 	ORDER_STATUS,
 	PAYMENT_RECEIPT_KIND,
 	SHIPPING_STATUS,
-} from '../schemas/order'
+} from '@sdk/commerce/messaging/orderSchema'
 import {
 	assertOrderMessageRumor,
 	createOrderChatRumor,
@@ -17,7 +17,7 @@ import {
 	createShippingUpdateRumor,
 	createStatusUpdateRumor,
 	type OrderMessageRumor,
-} from '../orders/orderMessageRumor'
+} from '@sdk/commerce/messaging/orderMessageRumor'
 
 const CREATED_AT = 1_700_000_000
 const BUYER_PUBKEY = 'a'.repeat(64)

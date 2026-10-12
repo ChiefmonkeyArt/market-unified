@@ -8,7 +8,7 @@
 
 import { describe, expect, test } from 'bun:test'
 import { finalizeEvent, generateSecretKey, getPublicKey, type EventTemplate, type NostrEvent } from 'nostr-tools'
-import { AUCTION_BID_KIND, AUCTION_KIND, AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '../auction/constants'
+import { AUCTION_BID_KIND, AUCTION_KIND, AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '@sdk/commerce/auctions/constants'
 import { createValidatorState, type ValidatorState } from '../../server/auction-validator/state'
 import { createValidatorSubscriber } from '../../server/auction-validator/subscriber'
 import { checkEventEnvelope } from '../../server/auction-validator/spamPolicy'

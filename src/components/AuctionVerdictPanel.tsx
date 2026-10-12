@@ -15,7 +15,7 @@
 import { useMemo } from 'react'
 import { useAuctionVerdicts } from '@/queries/auctions'
 import { parseValidatorVerdictEvent } from '@/lib/schemas/auction/validatorEvents'
-import type { ParsedValidatorVerdictEvent } from '@/lib/auction/events'
+import type { ParsedValidatorVerdictEvent } from '@sdk/commerce/auctions/events'
 import { AvatarUser } from '@/components/AvatarUser'
 
 interface Props {

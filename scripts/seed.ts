@@ -1,7 +1,7 @@
 // seed.ts
 import { devUser1, devUser2, devUser3, devUser4, devUser5, WALLETED_USER_LUD16, XPUB } from '@/lib/fixtures'
 import { CURRENCIES, PRODUCT_CATEGORIES } from '@/lib/constants'
-import { ORDER_STATUS, SHIPPING_STATUS } from '@/lib/schemas/order'
+import { ORDER_STATUS, SHIPPING_STATUS } from '@sdk/commerce/messaging/orderSchema'
 import { SHIPPING_KIND } from '@/lib/schemas/shippingOption'
 import { ndkActions } from '@/lib/stores/ndk'
 import {

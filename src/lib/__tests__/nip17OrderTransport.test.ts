@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import { finalizeEvent, generateSecretKey, getPublicKey, nip44, type Event } from 'nostr-tools'
 import { createNip17GiftWrapsWithSigner } from '../nostr/nip17'
 import { NIP59_GIFT_WRAP_KIND } from '../nostr/nip59'
-import { NIP17_DM_RELAY_LIST_KIND, type Nip17DmRelayListEvent } from '../nostr/nip17Relays'
+import { NIP17_DM_RELAY_LIST_KIND, type Nip17DmRelayListEvent } from '@sdk/core/nostr/nip17Relays'
 import {
 	buildNip17OrderGiftWrapFilter,
 	publishNip17OrderTransportMessage,
@@ -11,7 +11,7 @@ import {
 	type Nip17OrderTransportSigner,
 	type PublishNip17OrderTransportGiftWrapParams,
 } from '../orders/nip17OrderTransport'
-import { createOrderCreationRumor, createPaymentReceiptRumor } from '../orders/orderMessageRumor'
+import { createOrderCreationRumor, createPaymentReceiptRumor } from '@sdk/commerce/messaging/orderMessageRumor'
 
 type PublishCall = PublishNip17OrderTransportGiftWrapParams
 

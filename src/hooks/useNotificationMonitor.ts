@@ -13,7 +13,7 @@ import {
 } from '@/lib/productNotificationScopes'
 import { LIVE_ACTIVITY_KIND, LIVE_CHAT_KIND } from '@/lib/nip53'
 import { configStore } from '@/lib/stores/config'
-import { ORDER_GENERAL_KIND, ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@/lib/schemas/order'
+import { ORDER_GENERAL_KIND, ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
 import {
 	fetchAuctionBidsByBidder,
 	fetchAuctionsByPubkey,

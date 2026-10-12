@@ -20,7 +20,7 @@ import { createValidatorSubscriber } from './subscriber'
 import { publishValidatorPolicy } from './policy'
 import { recoverObservedAt } from './observedAtRecovery'
 import type { MintProbePolicy } from './mintReachability'
-import type { ValidatorPolicyDocument } from '../../lib/auction/events'
+import type { ValidatorPolicyDocument } from '@sdk/commerce/auctions/events'
 import { resolveBidSpamPolicy, type BidSpamPolicy } from './spamPolicy'
 
 export interface StartAuctionValidatorOptions {

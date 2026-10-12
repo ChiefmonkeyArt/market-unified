@@ -24,15 +24,15 @@ import {
 	VALIDATOR_VERDICT_KIND,
 	type Nut7ProofState,
 	type ValidatorClaim,
-} from '../../auction/constants'
+} from '@sdk/commerce/auctions/constants'
 import type {
 	BidderAggregateReputationDocument,
 	ParsedBidderAggregateReputationEvent,
 	ParsedValidatorPolicyEvent,
 	ParsedValidatorVerdictEvent,
 	ValidatorPolicyDocument,
-} from '../../auction/events'
-import type { NostrEventLike } from '../../nostr/eventLike'
+} from '@sdk/commerce/auctions/events'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { addressableCoordinate, nostrEventIdHex, nostrPubkeyHex, unixSeconds } from './common'
 import { readSingleTag } from './tagAccess'
 

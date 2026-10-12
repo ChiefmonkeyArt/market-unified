@@ -5,7 +5,7 @@ import {
 	parseNip17DmRelays,
 	resolveNip17DmRelayListFromEvents,
 	resolveNip17RelayTargetsFromEvents,
-} from '../nostr/nip17Relays'
+} from '@sdk/core/nostr/nip17Relays'
 
 const SENDER_PUBKEY = 'a'.repeat(64)
 const RECIPIENT_PUBKEY = 'b'.repeat(64)

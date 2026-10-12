@@ -23,8 +23,8 @@
 import type { NostrSigner } from '@contextvm/sdk'
 import type { ApplesauceRelayPool } from '@contextvm/sdk'
 import type { EventTemplate } from 'nostr-tools'
-import { VALIDATOR_VERDICT_KIND } from '../../lib/auction/constants'
-import { buildValidatorVerdictTags } from '../../lib/auction/tagBuilders'
+import { VALIDATOR_VERDICT_KIND } from '@sdk/commerce/auctions/constants'
+import { buildValidatorVerdictTags } from '@sdk/commerce/auctions/tagBuilders'
 import { markVerdictPublished, type ValidatorAuctionState, type ValidatorBidState } from './state'
 import { assignCloseRoles, assignLateValidLoserRole, deriveVerdict, verdictChanged, type DerivedVerdict } from './lifecycle'
 

@@ -31,7 +31,7 @@
 
 import NDK, { NDKEvent } from '@nostr-dev-kit/ndk'
 import { CashuMint } from '@cashu/cashu-ts'
-import { hashToCurveHexFromString } from '@/lib/cashu/hashToCurve'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 
 interface Args {
 	bidEventId?: string

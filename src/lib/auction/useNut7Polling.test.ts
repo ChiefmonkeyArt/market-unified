@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
 import { fetchBidNut7States } from './useNut7Polling'
-import type { ParsedBidEvent } from './events'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
 
 describe('fetchBidNut7States projection boundary', () => {
 	test('reads mint-reported state for a parsed bid and calls the mint once', async () => {

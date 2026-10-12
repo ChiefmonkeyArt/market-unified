@@ -40,9 +40,9 @@ import {
 	validateSettlementCompleteness,
 	type BidChainValidation,
 	type BidValidationVerdict,
-} from '../../lib/auction/validation'
-import type { ParsedPathReleaseEvent, ParsedSettlementEvent } from '../../lib/auction/events'
-import type { ValidatorClaim, ValidatorReason } from '../../lib/auction/constants'
+} from '@sdk/commerce/auctions/validation'
+import type { ParsedPathReleaseEvent, ParsedSettlementEvent } from '@sdk/commerce/auctions/events'
+import type { ValidatorClaim, ValidatorReason } from '@sdk/commerce/auctions/constants'
 import { aggregateProofStates, MAX_REPLACEMENT_CHAIN_DEPTH, type ValidatorAuctionState, type ValidatorBidState } from './state'
 
 // ============================================================================

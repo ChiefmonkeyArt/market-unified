@@ -14,8 +14,8 @@ import {
 	getAuctionP2pkLockPubkeyFromSecret,
 	normalizeAuctionDerivationPath,
 	toCompressedAuctionP2pkPubkey,
-} from '@/lib/auctionP2pk'
-import { AUCTION_MIN_BID_LEG_SATS } from '@/lib/auction/constants'
+} from '@sdk/commerce/auctions/auctionP2pk'
+import { AUCTION_MIN_BID_LEG_SATS } from '@sdk/commerce/auctions/constants'
 import { getAuctionHdAccountFromWalletKeys } from '@/lib/auctionHd'
 import {
 	CashuMint,
@@ -28,7 +28,7 @@ import {
 	type Proof,
 } from '@cashu/cashu-ts'
 import { getP2PKLocktime } from '@/lib/utils/cashu'
-import { buildDleqProofs } from '@/lib/cashu/dleq'
+import { buildDleqProofs } from '@sdk/commerce/payments/cashu/dleq'
 import { secp256k1 } from '@noble/curves/secp256k1.js'
 import { NDKEvent, NDKNutzap, NDKRelaySet, NDKUser, NDKZapper, type NDKFilter, type NDKTag } from '@nostr-dev-kit/ndk'
 import { NDKCashuDeposit, NDKCashuWallet, NDKWalletStatus, type NDKWalletTransaction } from '@nostr-dev-kit/wallet'

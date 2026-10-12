@@ -21,7 +21,7 @@
  * saves CPU on the validator side too.
  */
 
-import { checkProofStateBatch, type CheckProofStateOptions } from '../../lib/cashu/nut7'
+import { checkProofStateBatch, type CheckProofStateOptions } from '@sdk/commerce/payments/cashu/nut7'
 import { checkMintProbeDestination, createPolicyEnforcedRequest } from './mintDestination'
 import {
 	aggregateProofStates,

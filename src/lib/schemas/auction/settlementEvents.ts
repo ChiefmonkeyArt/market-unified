@@ -21,9 +21,9 @@ import {
 	AUCTION_SETTLEMENT_KIND,
 	type AuctionSettlementStatus,
 	type PathReleaseReason,
-} from '../../auction/constants'
-import type { AuctionFallbackChainEntry, ParsedPathReleaseEvent, ParsedSettlementEvent, SettlementPayoutEntry } from '../../auction/events'
-import type { NostrEventLike } from '../../nostr/eventLike'
+} from '@sdk/commerce/auctions/constants'
+import type { AuctionFallbackChainEntry, ParsedPathReleaseEvent, ParsedSettlementEvent, SettlementPayoutEntry } from '@sdk/commerce/auctions/events'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import {
 	addressableCoordinate,
 	bip32Path,

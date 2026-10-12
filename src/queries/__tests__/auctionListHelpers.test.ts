@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
-import { AUCTION_KIND, AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '@/lib/auction/constants'
+import { AUCTION_KIND, AUCTION_PATH_RELEASE_KIND, AUCTION_SETTLEMENT_KIND } from '@sdk/commerce/auctions/constants'
 import type { NostrFilter } from '@/lib/nostr/io'
 
 let fetchedRequests: Array<NostrFilter | NostrFilter[]> = []

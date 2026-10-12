@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import { getAuctionBidderStatus, getValidatedBidderStatus } from '@/lib/auctionBidderStatus'
-import type { ValidatedBidSet } from '@/lib/auction/bidValidation'
-import type { ParsedBidEvent } from '@/lib/auction/events'
+import type { ValidatedBidSet } from '@sdk/commerce/auctions/bidValidation'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
 
 const makeAuction = (params: { id?: string; startAt?: number; endAt?: number }): NDKEvent =>
 	({

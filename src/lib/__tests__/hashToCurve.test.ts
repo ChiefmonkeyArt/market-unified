@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test'
-import { hashToCurveHex, hashToCurveHexFromString } from '../cashu/hashToCurve'
+import { hashToCurveHex, hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 
 // NUT-00 official test vectors for hash_to_curve.
 // Source: https://github.com/cashubtc/nuts/blob/main/tests/00-tests.md

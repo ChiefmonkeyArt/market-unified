@@ -8,12 +8,12 @@ import {
 	hasValidatedPathReleaseForAuctionWin,
 } from '@/lib/auction/winNotification'
 import { fetchBidNut7States } from '@/lib/auction/useNut7Polling'
-import { fetchDleqKeysetsForBidsDetailed } from '@/lib/cashu/dleq'
+import { fetchDleqKeysetsForBidsDetailed } from '@sdk/commerce/payments/cashu/dleq'
 import { parseAuctionEvent } from '@/lib/schemas/auction/auctionEvent'
 import { parseBidEvent } from '@/lib/schemas/auction/bidEvent'
 import { parsePathReleaseEvent } from '@/lib/schemas/auction/settlementEvents'
 import { parseValidatorVerdictEvent } from '@/lib/schemas/auction/validatorEvents'
-import { toRawEvent } from '@/lib/nostr/eventLike'
+import { toRawEvent } from '@sdk/core/nostr/eventLike'
 import {
 	fetchAuction,
 	fetchAuctionWithRetry,
@@ -112,15 +112,15 @@ export function useAuctionWinMonitor() {
 					}
 					const parsedBids = bidEvents
 						.map((bid) => parseBidEvent(toRawEvent(bid)))
-						.filter((result): result is { ok: true; value: import('@/lib/auction/events').ParsedBidEvent } => result.ok)
+						.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedBidEvent } => result.ok)
 						.map((result) => result.value)
 					const parsedVerdicts = verdictEvents
 						.map((verdict) => parseValidatorVerdictEvent(toRawEvent(verdict)))
-						.filter((result): result is { ok: true; value: import('@/lib/auction/events').ParsedValidatorVerdictEvent } => result.ok)
+						.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedValidatorVerdictEvent } => result.ok)
 						.map((result) => result.value)
 					const parsedPathReleases = pathReleaseEvents
 						.map((release) => parsePathReleaseEvent(toRawEvent(release)))
-						.filter((result): result is { ok: true; value: import('@/lib/auction/events').ParsedPathReleaseEvent } => result.ok)
+						.filter((result): result is { ok: true; value: import('@sdk/commerce/auctions/events').ParsedPathReleaseEvent } => result.ok)
 						.map((result) => result.value)
 					const [nut7States, dleqAcq] = await Promise.all([
 						fetchBidNut7States(parsedBids, parsedAuction.mints),

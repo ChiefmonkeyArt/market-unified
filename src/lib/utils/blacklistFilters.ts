@@ -1,7 +1,7 @@
 import { blacklistActions } from '@/lib/stores/blacklist'
 import { getATagFromCoords } from './coords'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 
 /**
  * Filter out blacklisted items from an array of events

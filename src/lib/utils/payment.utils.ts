@@ -1,7 +1,7 @@
 import { Invoice } from '@getalby/lightning-tools'
 import { walletActions } from '@/lib/stores/wallet'
 import type { NDKSigner } from '@nostr-dev-kit/ndk'
-import type { WalletPaymentMethod } from '@/lib/payments/proof'
+import type { WalletPaymentMethod } from '@sdk/commerce/payments/proof'
 
 // WebLN types
 declare global {

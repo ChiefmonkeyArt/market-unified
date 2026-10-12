@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { MintKeys } from '@cashu/cashu-ts'
-import { fetchDleqKeysetsForBidsDetailed, getMintKeyset, type DleqKeysetFetcher } from '../cashu/dleq'
-import type { ParsedBidEvent } from './events'
+import { fetchDleqKeysetsForBidsDetailed, getMintKeyset, type DleqKeysetFetcher } from '@sdk/commerce/payments/cashu/dleq'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
 
 const POLL_INTERVAL_MS = 300_000
 

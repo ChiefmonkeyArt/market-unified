@@ -12,12 +12,12 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import type { Proof } from '@cashu/cashu-ts'
 import { getDecodedToken } from '@cashu/cashu-ts'
 import { authStore } from '../stores/auth'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '../auctionP2pk'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 import { upsertBidderRecord, walkBidderRecordChain, type BidderBidRecord } from '../auction/bidderRecords'
-import { buildPathReleaseTags } from '../auction/tagBuilders'
+import { buildPathReleaseTags } from '@sdk/commerce/auctions/tagBuilders'
 import { parsePathReleaseEvent } from '../schemas/auction/settlementEvents'
-import { validatePathRelease } from '../auction/validation'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent } from '../auction/events'
+import { validatePathRelease } from '@sdk/commerce/auctions/validation'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent } from '@sdk/commerce/auctions/events'
 
 // ---------- localStorage polyfill ----------
 

@@ -7,7 +7,7 @@ import {
 	SHIPPING_STATUS,
 	type OrderStatus,
 	type ShippingStatus,
-} from '@/lib/schemas/order'
+} from '@sdk/commerce/messaging/orderSchema'
 import { NIP59_GIFT_WRAP_KIND, signerSupportsNip44 } from '@/lib/nostr/nip59'
 import { decryptPrivateOrderMessageWithSigner, type PrivateOrderDeliveryDetails } from '@/lib/orders/privateOrderMessage'
 import { applesauceIo, type NostrFilter } from '@/lib/nostr/io'

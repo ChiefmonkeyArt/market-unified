@@ -2,7 +2,7 @@ import { AuctionCard } from '@/components/AuctionCard'
 import { ItemGrid } from '@/components/ItemGrid'
 import { cn } from '@/lib/utils'
 import { getAuctionRootEventId } from '@/queries/auctions'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 
 interface AuctionSectionGridProps {
 	title: string

@@ -1,6 +1,6 @@
 // src/components/auction/LatestBidsContainer.tsx
 import { getBidAmount, getBidMint, useStreamingAuctionBids } from '@/queries/auctions'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { cn } from '@/lib/utils'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from './ui/accordion'
 import { formatSats, getMintHostname } from '@/lib/wallet'
@@ -8,13 +8,13 @@ import { Badge } from './ui/badge'
 import type { ReactNode } from 'react'
 import { UserCard } from './UserCard'
 import { Check, Landmark } from 'lucide-react'
-import type { ValidatedBidSet } from '@/lib/auction/bidValidation'
+import type { ValidatedBidSet } from '@sdk/commerce/auctions/bidValidation'
 import {
 	getValidatedTopAmount,
 	getValidatedTopBidderPubkey,
 	getValidatedBidderState,
 	getBidClassification,
-} from '@/lib/auction/validatedBidView'
+} from '@sdk/commerce/auctions/validatedBidView'
 
 function TechnicalDataRow({ label, value }: { label: string; value: ReactNode }) {
 	return (

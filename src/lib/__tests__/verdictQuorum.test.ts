@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test'
-import { computeVerdictQuorum } from '@/lib/auction/verdictQuorum'
-import type { ParsedValidatorVerdictEvent } from '@/lib/auction/events'
+import { computeVerdictQuorum } from '@sdk/commerce/auctions/verdictQuorum'
+import type { ParsedValidatorVerdictEvent } from '@sdk/commerce/auctions/events'
 
 const AUDITORS = ['auditor-1', 'auditor-2', 'auditor-3']
 

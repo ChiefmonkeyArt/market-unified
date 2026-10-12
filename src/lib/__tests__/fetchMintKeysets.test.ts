@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test, setSystemTime } from 'bun:test'
-import { fetchMintKeysets, clearKeysetCache } from '../auction/validation'
+import { fetchMintKeysets, clearKeysetCache } from '@sdk/commerce/auctions/validation'
 import type { MintKeyset } from '@cashu/cashu-ts'
 
 const MINT_URL = 'https://mint.example.com'

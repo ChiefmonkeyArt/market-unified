@@ -10,11 +10,11 @@
 
 import { describe, expect, test } from 'bun:test'
 import { getEncodedToken, type Proof } from '@cashu/cashu-ts'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '../auction/events'
-import { AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS } from '../auction/constants'
-import { hashToCurveHexFromString } from '../cashu/hashToCurve'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedSettlementEvent } from '@sdk/commerce/auctions/events'
+import { AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS } from '@sdk/commerce/auctions/constants'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 import { makeHonestDleqProof } from '../cashu/dleqFixture'
-import type { NostrEventLike } from '../nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { deriveVerdict, assignCloseRoles, pickWinningBid, verdictChanged } from '../../server/auction-validator/lifecycle'
 import type { ValidatorAuctionState, ValidatorBidState } from '../../server/auction-validator/state'
 import { MAX_REPLACEMENT_CHAIN_DEPTH, recordNut7State, recordSettlement } from '../../server/auction-validator/state'
@@ -365,7 +365,7 @@ describe('deriveVerdict — pre-close', () => {
 	test('post-close partial redemption (one of two proofs spent) stays won_pending_settlement, not settled_*', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, {
 			childPubkey,
@@ -518,7 +518,7 @@ describe('deriveVerdict — post-close', () => {
 	test('winner with spent proofs but without kind-1024 → still won_pending_settlement', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -575,7 +575,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('valid path release + NUT-7 spent within grace → settled_promptly', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -627,7 +627,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('kind-1025 received but mint hasn’t flipped to spent yet → still won_pending_settlement', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -652,7 +652,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('spent proofs plus malformed kind-1024 → still won_pending_settlement', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey, amount: 10 })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -682,7 +682,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('settled_late when grace already expired', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -719,7 +719,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('settled_promptly when release observed inside grace even if kind-1024 is delayed', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -756,7 +756,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('settled_late when release observed after grace even if kind-1024 is backdated', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -793,7 +793,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('a late voluntary_late release is classified by its OWN observed time, not an earlier release’s', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 
@@ -843,7 +843,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('kind-1025 from the wrong signer → fraudulent_bid', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -872,7 +872,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('kind-1025 missing cashu_token → won_pending_settlement (validator skips cashu token validation)', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -892,7 +892,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('kind-1025 with token amount mismatch → won_pending_settlement (validator skips cashu token validation)', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey, amount: 10 })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -916,7 +916,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('loser with a spurious settlement release stays lost_pending_refund (not fraudulent_bid)', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -946,7 +946,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('fallback bidder with valid fallback_settlement can settle', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true, fallbackOfferedAt: auction.maxEndAt + 10 })
@@ -986,7 +986,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('an isolated unusable authorized release still flags fraudulent_bid when structurally invalid (wrong derivation path)', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -1005,7 +1005,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('an early unusable release does not block a later valid release — relay-order independent', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const token = buildCashuToken(bid.mint, bid.lockSecrets, [bid.amount])
@@ -1054,7 +1054,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('settlement-referenced selection overrides the earliest-valid heuristic', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const auctionState = buildAuctionState(auction, { closeHandled: true })
@@ -1103,7 +1103,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('conflicting seller settlements are triaged deterministically (delivery-order independent)', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const token = buildCashuToken(bid.mint, bid.lockSecrets, [bid.amount])
@@ -1172,7 +1172,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 	test('a settlement referencing an invalid release is not selected; a valid settlement wins', () => {
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB, settlementGrace: 100 })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 		const token = buildCashuToken(bid.mint, bid.lockSecrets, [bid.amount])
@@ -1240,7 +1240,7 @@ describe('deriveVerdict — kind-1025 settlement', () => {
 		// in the validator path.
 		const auction = buildAuction({ p2pkXpub: REAL_XPUB })
 		const path = 'm/0/0/0/0/0'
-		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('../auctionP2pk') as typeof import('../auctionP2pk')
+		const { deriveAuctionChildP2pkPubkeyFromXpub } = require('@sdk/commerce/auctions/auctionP2pk') as typeof import('@sdk/commerce/auctions/auctionP2pk')
 		const childPubkey = deriveAuctionChildP2pkPubkeyFromXpub(REAL_XPUB, path)
 		const bid = buildBid(auction, { childPubkey })
 

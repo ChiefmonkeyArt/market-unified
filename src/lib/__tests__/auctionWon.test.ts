@@ -7,10 +7,10 @@ import {
 	shouldUseNonBlockingAuctionWinPrompt,
 } from '@/lib/auction/winNotification'
 import { auctionWonActions, auctionWonStore, type AuctionWonPayload } from '@/lib/stores/auctionWon'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedValidatorVerdictEvent } from '@/lib/auction/events'
-import { hashToCurveHexFromString } from '@/lib/cashu/hashToCurve'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '@/lib/auctionP2pk'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedPathReleaseEvent, ParsedValidatorVerdictEvent } from '@sdk/commerce/auctions/events'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 import { makeDleqKeyset, makeHonestDleqProof } from '@/lib/cashu/dleqFixture'
 import { getEncodedToken, type MintKeys, type Proof } from '@cashu/cashu-ts'
 

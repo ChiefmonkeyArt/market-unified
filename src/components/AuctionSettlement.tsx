@@ -16,17 +16,17 @@ import {
 	type SettlementCtaKind,
 	type SettlementDescriptor,
 	type SettlementIconKey,
-} from '@/lib/auction/settlementDescriptor'
+} from '@sdk/commerce/auctions/settlementDescriptor'
 import { useNut7Polling } from '@/lib/auction/useNut7Polling'
 import { useDleqKeysetPolling } from '@/lib/auction/useDleqKeysetPolling'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import type {
 	ParsedAuctionEvent,
 	ParsedBidEvent,
 	ParsedPathReleaseEvent,
 	ParsedSettlementEvent,
 	ParsedValidatorVerdictEvent,
-} from '@/lib/auction/events'
+} from '@sdk/commerce/auctions/events'
 import { Clock, CheckCircle, Ban, Truck, Gavel, Trophy, BadgeCheck, AlertTriangle } from 'lucide-react'
 import { AuctionClaimDialog } from './AuctionClaimDialog'
 import { useNavigate } from '@tanstack/react-router'

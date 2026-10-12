@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { NostrEventLike } from './eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import type { NostrFilter } from './io'
 import { applesauceIo } from './io'
 

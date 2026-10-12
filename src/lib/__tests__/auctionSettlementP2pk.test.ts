@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'bun:test'
 import { HDKey } from '@scure/bip32'
 import { getEncodedToken, type Proof } from '@cashu/cashu-ts'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '@/lib/auctionP2pk'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 import {
 	addAuctionSettlementProofAmount,
 	preflightAuctionSettlementP2pk,
 	preflightAuctionSettlementP2pkChain,
-} from '@/lib/auctionSettlementP2pk'
-import { AUCTION_MIN_BID_LEG_SATS } from '@/lib/auction/constants'
+} from '@sdk/commerce/auctions/auctionSettlementP2pk'
+import { AUCTION_MIN_BID_LEG_SATS } from '@sdk/commerce/auctions/constants'
 
 const makeFixture = (derivationPath = '7/11/13/17/19') => {
 	const seed = Uint8Array.from({ length: 32 }, (_, index) => index + 1)

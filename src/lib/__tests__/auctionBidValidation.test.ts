@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
-import { computeBidFloor, validateBid } from '../auction/validation'
-import type { ParsedAuctionEvent, ParsedBidEvent, MinBidCurve } from '../auction/events'
-import { AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS, VALIDATOR_REASONS } from '../auction/constants'
-import { hashToCurveHexFromString } from '../cashu/hashToCurve'
+import { computeBidFloor, validateBid } from '@sdk/commerce/auctions/validation'
+import type { ParsedAuctionEvent, ParsedBidEvent, MinBidCurve } from '@sdk/commerce/auctions/events'
+import { AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS, VALIDATOR_REASONS } from '@sdk/commerce/auctions/constants'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 import { makeHonestDleqProof } from '../cashu/dleqFixture'
-import type { DleqProof } from '../cashu/dleq'
+import type { DleqProof } from '@sdk/commerce/payments/cashu/dleq'
 
 // =============================================================================
 // Fixture helpers

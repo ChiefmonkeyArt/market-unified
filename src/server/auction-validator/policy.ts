@@ -15,9 +15,9 @@
 
 import type { NostrSigner } from '@contextvm/sdk'
 import type { ApplesauceRelayPool } from '@contextvm/sdk'
-import { DEFAULT_MAX_SKEW_SECONDS, VALIDATOR_POLICY_KIND, VALIDATOR_POLICY_SCHEMA_TYPE } from '../../lib/auction/constants'
-import { buildValidatorPolicyContent, buildValidatorPolicyTags } from '../../lib/auction/tagBuilders'
-import type { ValidatorAdmissionPolicy, ValidatorPolicyDocument } from '../../lib/auction/events'
+import { DEFAULT_MAX_SKEW_SECONDS, VALIDATOR_POLICY_KIND, VALIDATOR_POLICY_SCHEMA_TYPE } from '@sdk/commerce/auctions/constants'
+import { buildValidatorPolicyContent, buildValidatorPolicyTags } from '@sdk/commerce/auctions/tagBuilders'
+import type { ValidatorAdmissionPolicy, ValidatorPolicyDocument } from '@sdk/commerce/auctions/events'
 import { resolveBidSpamPolicy, type BidSpamPolicy } from './spamPolicy'
 
 export interface PublishValidatorPolicyDeps {

@@ -10,9 +10,9 @@ import {
 	PaymentRequestSchema,
 	ShippingUpdateSchema,
 	StatusUpdateSchema,
-} from '../schemas/order'
+} from '@sdk/commerce/messaging/orderSchema'
 import type { UnwrappedNip17OrderMessage } from './nip17OrderRead'
-import { assertOrderMessageRumor, type OrderMessageRumor } from './orderMessageRumor'
+import { assertOrderMessageRumor, type OrderMessageRumor } from '@sdk/commerce/messaging/orderMessageRumor'
 
 const INTEGER_AMOUNT_RE = /^\d+$/
 const LEGACY_FIXED_TWO_DECIMAL_AMOUNT_RE = /^\d+\.\d{2}$/

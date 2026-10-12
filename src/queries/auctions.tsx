@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@/lib/schemas/order'
-import { AUCTION_PATH_RELEASE_KIND, DEFAULT_AUDITOR_QUORUM, VALIDATOR_VERDICT_KIND } from '@/lib/auction/constants'
+import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
+import { AUCTION_PATH_RELEASE_KIND, DEFAULT_AUDITOR_QUORUM, VALIDATOR_VERDICT_KIND } from '@sdk/commerce/auctions/constants'
 import {
 	decryptPrivateAuctionClaimMessageForActiveSigner,
 	getAuctionClaimPublicMarkerFields,
@@ -27,8 +27,8 @@ import {
 import { NIP59_GIFT_WRAP_KIND } from '@/lib/nostr/nip59'
 import { applesauceIo } from '@/lib/nostr/io'
 import type { NostrFilter } from '@/lib/nostr/io'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
-import { toRawEvent } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
+import { toRawEvent } from '@sdk/core/nostr/eventLike'
 import { useSubscriptionEvents } from '@/lib/nostr/useSubscriptionEvents'
 import { queryOptions, useQuery } from '@tanstack/react-query'
 import { auctionKeys, type AuctionByPubkeyScope } from './queryKeyFactory'
@@ -36,14 +36,14 @@ import { filterBlacklistedEvents } from '@/lib/utils/blacklistFilters'
 import { excludeTestLabeledEvents } from '@/queries/testLabels'
 import { verifyNostrEventSignature } from '@/lib/nostr/event-signature'
 import type { MintKeys } from '@cashu/cashu-ts'
-import { computeValidatedBids } from '@/lib/auction/bidValidation'
-import type { ValidatedBidSet } from '@/lib/auction/bidValidation'
+import { computeValidatedBids } from '@sdk/commerce/auctions/bidValidation'
+import type { ValidatedBidSet } from '@sdk/commerce/auctions/bidValidation'
 import { parseAuctionEvent } from '@/lib/schemas/auction/auctionEvent'
 import { filterAdmissibleAuctionEvents } from '@/lib/schemas/auction/auctionAdmission'
 import { parseBidEvent } from '@/lib/schemas/auction/bidEvent'
 import { parseValidatorVerdictEvent } from '@/lib/schemas/auction/validatorEvents'
-import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent } from '@/lib/auction/events'
-import type { Nut7ProofState } from '@/lib/auction/constants'
+import type { ParsedAuctionEvent, ParsedBidEvent, ParsedValidatorVerdictEvent } from '@sdk/commerce/auctions/events'
+import type { Nut7ProofState } from '@sdk/commerce/auctions/constants'
 
 type EventFetcher = (filter: NostrFilter | NostrFilter[]) => Promise<NostrEventLike[]>
 

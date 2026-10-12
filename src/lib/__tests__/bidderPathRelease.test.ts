@@ -18,7 +18,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test'
 import type { Proof } from '@cashu/cashu-ts'
 import { authStore } from '../stores/auth'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '../auctionP2pk'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
 import {
 	findBidderRecord,
 	findBidderRecordsForAuction,

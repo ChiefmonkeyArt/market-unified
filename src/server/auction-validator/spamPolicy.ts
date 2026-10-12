@@ -1,4 +1,4 @@
-import type { ParsedAuctionEvent, ParsedBidEvent } from '../../lib/auction/events'
+import type { ParsedAuctionEvent, ParsedBidEvent } from '@sdk/commerce/auctions/events'
 import type { NostrEvent } from 'nostr-tools'
 import type { PendingBufferLimits } from './pendingBuffer'
 

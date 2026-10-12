@@ -37,7 +37,7 @@
 
 import type { ZodError } from 'zod'
 
-import type { NostrEventLike } from '../../nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { parseAuctionEvent } from './auctionEvent'
 
 export type AuctionAdmissionIssueCode = 'wrong_kind' | 'missing_required_tag' | 'invalid_tag_value'

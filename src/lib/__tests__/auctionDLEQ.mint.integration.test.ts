@@ -11,7 +11,7 @@ import {
 	verifyBidDleqWithKeysets,
 	type DleqProof,
 	type DleqVerifyResult,
-} from '../cashu/dleq'
+} from '@sdk/commerce/payments/cashu/dleq'
 
 /**
  * I3 — DLEQ via a real local mint (not the offline A3 fixture).

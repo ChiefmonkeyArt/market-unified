@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import type { MintKeys } from '@cashu/cashu-ts'
-import { DleqKeysetTerminalError, fetchDleqKeysetsForBids, fetchDleqKeysetsForBidsDetailed, type DleqKeysetFetcher } from '../cashu/dleq'
-import type { ParsedBidEvent } from '../auction/events'
+import { DleqKeysetTerminalError, fetchDleqKeysetsForBids, fetchDleqKeysetsForBidsDetailed, type DleqKeysetFetcher } from '@sdk/commerce/payments/cashu/dleq'
+import type { ParsedBidEvent } from '@sdk/commerce/auctions/events'
 
 const MINT_A = 'https://mint-a.test'
 const MINT_B = 'https://mint-b.test'

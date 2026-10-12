@@ -7,8 +7,8 @@ import WebSocket from 'ws'
 import { devUser1, devUser2, devUser3 } from '../../src/lib/fixtures'
 import type { Page } from 'playwright/test'
 import { getAuctionHdAccountFromWalletKeys } from '../../src/lib/auctionHd'
-import { deriveAuctionChildP2pkPubkeyFromXpub } from '../../src/lib/auctionP2pk'
-import { hashToCurveHexFromString } from '../../src/lib/cashu/hashToCurve'
+import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auctionP2pk'
+import { hashToCurveHexFromString } from '@sdk/commerce/payments/cashu/hashToCurve'
 import { CashuMint, CashuWallet, getEncodedToken, type Proof } from '@cashu/cashu-ts'
 
 // ---------------------------------------------------------------------------

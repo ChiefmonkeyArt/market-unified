@@ -1,4 +1,4 @@
-import { ORDER_PROCESS_KIND } from '@/lib/schemas/order'
+import { ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
 import { ndkActions } from '@/lib/stores/ndk'
 
 export interface PIIScanResult {

@@ -1,7 +1,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, mock, test } from 'bun:test'
-import { AUCTION_KIND } from '@/lib/auction/constants'
+import { AUCTION_KIND } from '@sdk/commerce/auctions/constants'
 import type { NostrFilter } from '@/lib/nostr/io'
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { testLabelActions } from '@/lib/stores/testLabels'
 import { setCachedTestLabel, invalidateTestLabelCache } from '../testLabels'
 

@@ -11,7 +11,7 @@ import {
 	upsertAuction,
 	type ValidatorAuctionState,
 } from '../../server/auction-validator/state'
-import type { MinBidCurve, ParsedAuctionEvent } from '../auction/events'
+import type { MinBidCurve, ParsedAuctionEvent } from '@sdk/commerce/auctions/events'
 import type { NDKEvent } from '@nostr-dev-kit/ndk'
 
 const VALIDATOR_PK = 'c'.repeat(64)

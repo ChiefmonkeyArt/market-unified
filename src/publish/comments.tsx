@@ -1,4 +1,4 @@
-import { getEventAddress } from '@/lib/nostr/eventLike'
+import { getEventAddress } from '@sdk/core/nostr/eventLike'
 import { type Comment } from '@/queries/comments'
 import { ndkActions } from '@/lib/stores/ndk'
 import { commentKeys } from '@/queries/queryKeyFactory'

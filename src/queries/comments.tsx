@@ -1,4 +1,4 @@
-import { getEventAddress } from '@/lib/nostr/eventLike'
+import { getEventAddress } from '@sdk/core/nostr/eventLike'
 import { ndkActions } from '@/lib/stores/ndk'
 import { NDKEvent, type NDKFilter } from '@nostr-dev-kit/ndk'
 import { queryOptions, useQuery } from '@tanstack/react-query'

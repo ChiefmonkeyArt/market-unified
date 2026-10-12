@@ -6,7 +6,7 @@ import {
 	getMintKeyset,
 	buildDleqProofs,
 	type DleqVerifyResult,
-} from '../cashu/dleq'
+} from '@sdk/commerce/payments/cashu/dleq'
 import type { MintKeys, Proof } from '@cashu/cashu-ts'
 import { makeHonestDleqProof, makeHonestDleqFixture, makeDleqKeyset } from '../cashu/dleqFixture'
 

@@ -1,4 +1,4 @@
-import type { NostrEventLike } from '@/lib/nostr/eventLike'
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { TEST_LABEL_AUCTION_KIND, TEST_LABEL_PRODUCT_KIND } from '@/lib/constants/testLabels'
 import { testLabelActions } from '@/lib/stores/testLabels'
 import { getATagFromCoords } from './coords'
