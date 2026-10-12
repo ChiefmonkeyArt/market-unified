@@ -6,7 +6,9 @@ const SDK_ROOT = resolve(import.meta.dir)
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.mts', '.cts'])
 const TEST_FILE = /(?:\.test|\.spec)\.(?:ts|tsx|mts|cts)$/
 const IMPORT_SPECIFIER = /\bfrom\s*['"]([^'"]+)['"]|\bimport\s*(?:\(\s*)?['"]([^'"]+)['"]/g
-const FORBIDDEN_MODULES = /^(?:react|react-dom|@tanstack\/|@\/|@ui\/|@platform\/)/
+// Retrofit rule: core modules never import the app, the UI, or a relay-client library;
+// relays, signers, mints and storage are passed in through ports.
+const FORBIDDEN_MODULES = /^(?:react|react-dom|@tanstack\/|@\/|@ui\/|@platform\/|@nostr-dev-kit\/|applesauce-)/
 
 async function listSourceFiles(directory: string): Promise<string[]> {
 	const entries = await readdir(directory, { withFileTypes: true })

@@ -1,3 +1,4 @@
+import { secureRandomHex } from '@sdk/core'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -29,7 +30,7 @@ export function NostrConnectQR({ onError, onSuccess }: NostrConnectQRProps) {
 	const activeRelay = isCustomRelay ? customRelay : selectedRelay
 
 	// Generate secret once and keep it stable
-	const tempSecretRef = useRef<string>(Math.random().toString(36).substring(2, 15))
+	const tempSecretRef = useRef<string>(secureRandomHex(16))
 	const tempSecret = tempSecretRef.current
 
 	const isLoggingInRef = useRef(false)

@@ -8,6 +8,7 @@ import {
 import { AUCTION_MIN_DURATION_SECONDS, validateAuctionPublishInput } from '@/lib/auctionPublishValidation'
 import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
 import { configStore } from '@/lib/stores/config'
+import { secureRandomUUID } from '@sdk/core'
 import { nip60Actions, type AuctionP2pkKeyScheme, AuctionBidLockMutationPossibleError } from '@/lib/stores/nip60'
 import type { ProductShippingSelectionInput } from '@sdk/commerce/products'
 import { getBidAmount, getBidStatus, markAuctionAsDeleted } from '@/queries/auctions'
@@ -691,7 +692,7 @@ export const publishAuctionBid = async (formData: AuctionBidFormData): Promise<s
 		// (what the validator uses for the min-increment check); the lock
 		// itself is only the delta. `prev_bid` chains the leg to the
 		// previous one when this is a rebid.
-		const bidNonce = (globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`).toString()
+		const bidNonce = secureRandomUUID()
 		const bidTemplate: EventTemplate = {
 			kind: AUCTION_BID_KIND,
 			content: JSON.stringify({

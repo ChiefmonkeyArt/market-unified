@@ -12,6 +12,7 @@
  */
 import { RelayGroup, RelayPool } from 'applesauce-relay'
 import type { EventTemplate, NostrEvent } from 'nostr-tools/pure'
+import { verifyNostrEventSignature } from './event-signature'
 
 import { getWriteRelays, ndkStore } from '@/lib/stores/ndk'
 import type { FetchOptions, NostrFilter, NostrIo, PublishOptions, PublishResult, SubscribeOptions } from './io'
@@ -32,6 +33,15 @@ function relayUrls(override?: string[]): string[] {
 function writeRelayUrls(override?: string[]): string[] {
 	if (override && override.length > 0) return override
 	return getWriteRelays()
+}
+
+function isVerified(event: NostrEvent | undefined): boolean {
+	if (!event?.id || !event.sig) return false
+	try {
+		return verifyNostrEventSignature(event)
+	} catch {
+		return false
+	}
 }
 
 function asFilters(filter: NostrFilter | NostrFilter[]): NostrFilter[] {
@@ -96,6 +106,9 @@ export const applesauceIo: NostrIo = {
 				.subscribe({
 					next: (event) => {
 						const raw = event as NostrEvent
+						// Trust boundary: applesauce-relay does not verify signatures. Drop any event
+						// whose id/pubkey/sig do not verify before a caller can see it (fail closed).
+						if (!isVerified(raw)) return
 						const id = raw?.id
 						if (id) {
 							if (seenIds.has(id)) return
@@ -179,7 +192,7 @@ export const applesauceIo: NostrIo = {
 					stopIfCloseOnEose()
 					return
 				}
-				if (message.type === 'EVENT' && !stopped) onEvent(message.event as NostrEvent)
+				if (message.type === 'EVENT' && !stopped && isVerified(message.event as NostrEvent)) onEvent(message.event as NostrEvent)
 			})
 		if (stopAfterSubscribe) subscription.unsubscribe()
 		return stop

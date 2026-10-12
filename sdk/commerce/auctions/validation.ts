@@ -250,7 +250,8 @@ export type ReleaseValidityResult =
 			isValid: true
 			releaseTiming: ReleaseTiming
 			derivedChildPubkey: string
-			decodedTokenSummary: {
+			/** Absent when the caller passed `skipCashuTokenCheck` (the validator path). */
+			decodedTokenSummary?: {
 				mintUrl: string
 				amount: number
 				proofCount: number
