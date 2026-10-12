@@ -167,3 +167,72 @@ describe('multi-seller order planning', () => {
 		})
 	})
 })
+
+describe('resuming a partial multi-seller checkout', () => {
+	const work = [
+		{ sellerPubkey: 'seller-a', orderId: 'order-a', requiresPrivateDelivery: true, privateDelivery: 'wrap-a', orderMarker: 'marker-a' },
+		{ sellerPubkey: 'seller-b', orderId: 'order-b', requiresPrivateDelivery: true, privateDelivery: 'wrap-b', orderMarker: 'marker-b' },
+	]
+	const makePorts = (sequence: string[], failWrapB: { value: boolean }) => ({
+		publishPrivateDelivery: async (seller: (typeof work)[number]) => {
+			if (seller.sellerPubkey === 'seller-b' && failWrapB.value) throw new Error('relay rejected wrap-b')
+			sequence.push(`wrap:${seller.sellerPubkey}`)
+			return { eventId: `wrap-event-${seller.sellerPubkey}` }
+		},
+		publishOrderMarker: async (seller: (typeof work)[number]) => {
+			sequence.push(`marker:${seller.sellerPubkey}`)
+			return { eventId: `marker-event-${seller.sellerPubkey}` }
+		},
+		publishPaymentRequests: async (seller: (typeof work)[number]) => {
+			sequence.push(`pay:${seller.sellerPubkey}`)
+			return { completed: 1, failed: 0, eventIds: [`pay-event-${seller.sellerPubkey}`] }
+		},
+	})
+
+	test('first seller delivered, second fails: outcome is partial with no order IDs but resumable progress', async () => {
+		const sequence: string[] = []
+		const outcome = await executeSellerOrderPublishWorkflow(work, makePorts(sequence, { value: true }))
+		expect(outcome.status).toBe('partial')
+		expect(outcome.orderIds).toEqual([])
+		expect(outcome.progress.find((p) => p.sellerPubkey === 'seller-a')?.completedPhases).toEqual(['private_delivery'])
+		expect(sequence).toEqual(['wrap:seller-a'])
+	})
+
+	test('resume skips already-confirmed phases and never republishes them', async () => {
+		const first: string[] = []
+		const failing = { value: true }
+		const partial = await executeSellerOrderPublishWorkflow(work, makePorts(first, failing))
+		failing.value = false
+		const second: string[] = []
+		const outcome = await executeSellerOrderPublishWorkflow(work, makePorts(second, failing), { resume: partial.progress })
+		expect(outcome.status).toBe('published')
+		expect(outcome.orderIds).toEqual(['order-a', 'order-b'])
+		expect(second).toEqual(['wrap:seller-b', 'marker:seller-a', 'pay:seller-a', 'marker:seller-b', 'pay:seller-b'])
+		expect(outcome.progress.find((p) => p.sellerPubkey === 'seller-a')?.publishedEventIds).toContain('wrap-event-seller-a')
+	})
+
+	test('resume after a marker was published does not publish that marker again', async () => {
+		const resume = [
+			{
+				sellerPubkey: 'seller-a',
+				orderId: 'order-a',
+				completedPhases: ['private_delivery', 'order_marker', 'payment_request'] as const,
+				publishedEventIds: ['w', 'm', 'p'],
+				paymentRequestFailures: 0,
+			},
+			{ sellerPubkey: 'seller-b', orderId: 'order-b', completedPhases: ['private_delivery'] as const, publishedEventIds: ['w2'], paymentRequestFailures: 0 },
+		].map((entry) => ({ ...entry, completedPhases: [...entry.completedPhases] }))
+		const sequence: string[] = []
+		const outcome = await executeSellerOrderPublishWorkflow(work, makePorts(sequence, { value: false }), { resume })
+		expect(outcome.status).toBe('published')
+		expect(outcome.orderIds).toEqual(['order-a', 'order-b'])
+		expect(sequence).toEqual(['marker:seller-b', 'pay:seller-b'])
+	})
+
+	test('progress for a different order ID is ignored (no cross-checkout resume)', async () => {
+		const resume = [{ sellerPubkey: 'seller-a', orderId: 'other-order', completedPhases: ['private_delivery' as const], publishedEventIds: ['x'], paymentRequestFailures: 0 }]
+		const sequence: string[] = []
+		await executeSellerOrderPublishWorkflow(work, makePorts(sequence, { value: false }), { resume })
+		expect(sequence[0]).toBe('wrap:seller-a')
+	})
+})

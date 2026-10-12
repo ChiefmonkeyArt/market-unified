@@ -790,7 +790,7 @@ function RouteComponent() {
 		!deliveryRequirementsError &&
 		(!deliveryRequirements.needsDigitalDeliveryContact || isValidDigitalDeliveryContact(shippingData.email))
 
-	const proceedWithPayment = async () => {
+	const proceedWithPayment = async (resume?: SellerOrderPublishOutcome['progress']) => {
 		if (shippingData && sellers.length > 0 && specOrderIds.length === 0) {
 			setIsCreatingOrder(true)
 			try {
@@ -800,16 +800,16 @@ function RouteComponent() {
 					productsBySeller,
 					sellerData,
 					v4vShares,
+					...(resume ? { resume } : {}),
 				})
 				if (orderOutcome.status === 'partial') {
 					setPartialOrderOutcome(orderOutcome)
-					toast.error(
-						`Order creation partially succeeded: ${orderOutcome.orderIds.length} seller order(s) were published. Do not retry this checkout.`,
-					)
+					toast.error('Some seller orders were sent, but checkout did not finish. You can safely resume it.')
 					setIsCreatingOrder(false)
 					return
 				}
 				if (orderOutcome.status === 'failed') throw new Error(orderOutcome.error)
+				setPartialOrderOutcome(null)
 
 				setSpecOrderIds(orderOutcome.orderIds)
 				if (orderOutcome.paymentRequestFailures > 0) {
@@ -1010,11 +1010,28 @@ function RouteComponent() {
 										<div className="flex-1 overflow-y-auto">
 											{partialOrderOutcome && (
 												<div role="alert" className="mb-4 rounded-md border border-amber-500 bg-amber-50 p-4 text-sm text-amber-950">
-													<p className="font-semibold">Some seller orders were published, but checkout did not finish.</p>
-													<p>Do not retry this checkout. Published order IDs: {partialOrderOutcome.orderIds.join(', ') || 'none'}.</p>
+													<p className="font-semibold">Some seller orders were sent, but checkout did not finish.</p>
+													<ul className="my-2 list-disc pl-5" data-testid="partial-checkout-progress">
+														{partialOrderOutcome.progress.map((entry) => (
+															<li key={entry.orderId}>
+																Seller {entry.sellerPubkey.slice(0, 8)}…:{' '}
+																{entry.completedPhases.length === 0 ? 'not sent yet' : `sent (${entry.completedPhases.join(', ')})`}
+															</li>
+														))}
+													</ul>
 													<p>
-														Failure phase: {partialOrderOutcome.failedPhase}. {partialOrderOutcome.error}
+														Stopped at: {partialOrderOutcome.failedPhase}. {partialOrderOutcome.error}
 													</p>
+													<p>Resuming keeps the same order IDs and only sends what is missing, so sellers will not get duplicate orders.</p>
+													<Button
+														type="button"
+														className="mt-3"
+														data-testid="resume-partial-checkout"
+														disabled={isCreatingOrder}
+														onClick={() => void proceedWithPayment(partialOrderOutcome.progress)}
+													>
+														{isCreatingOrder ? 'Resuming…' : 'Resume checkout'}
+													</Button>
 												</div>
 											)}
 											<OrderFinalizeComponent

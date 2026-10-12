@@ -686,6 +686,8 @@ export interface PublishOrderDependenciesParams {
 	productsBySeller: Record<string, CartProduct[]>
 	sellerData: Record<string, SellerData>
 	v4vShares: Record<string, V4VShare[]>
+	/** Progress from a previous partial attempt. Reuses its order IDs and skips confirmed phases. */
+	resume?: readonly SellerOrderPublishProgress[]
 }
 
 type SellerOrderPreflight = {
@@ -844,7 +846,7 @@ export async function publishOrderWorkflowWithDependencies(params: PublishOrderD
 
 		const planInputs = preflight.map(({ sellerPubkey, sellerProducts, data, requirements, shippingRef }) => ({
 			sellerPubkey,
-			orderId: uuidv4(),
+			orderId: params.resume?.find((entry) => entry.sellerPubkey === sellerPubkey)?.orderId ?? uuidv4(),
 			amountSats: data.satsTotal,
 			products: sellerProducts.map((product) => ({ productId: product.id, quantity: product.amount })),
 			shippingRef,
@@ -1053,6 +1055,7 @@ export async function publishOrderWorkflowWithDependencies(params: PublishOrderD
 					return { completed, failed, eventIds }
 				},
 			},
+			{ resume: params.resume },
 		)
 		orderIds = workflow.orderIds
 		progress = workflow.progress

@@ -172,14 +172,25 @@ export function createSellerOrderPublishFailure(input: {
 export async function executeSellerOrderPublishWorkflow<PrivateDelivery, OrderMarker>(
 	work: readonly PreparedSellerOrderWork<PrivateDelivery, OrderMarker>[],
 	ports: SellerOrderPublishPorts<PrivateDelivery, OrderMarker>,
+	options: { resume?: readonly SellerOrderPublishProgress[] } = {},
 ): Promise<SellerOrderPublishOutcome> {
-	let progress: SellerOrderPublishProgress[] = work.map((seller) => ({
-		sellerPubkey: seller.sellerPubkey,
-		orderId: seller.orderId,
-		completedPhases: [],
-		publishedEventIds: [],
-		paymentRequestFailures: 0,
-	}))
+	// Resume: a previous partial attempt's progress for the SAME seller + orderId is
+	// carried forward, and any phase it already confirmed is skipped. This is what lets
+	// a buyer finish a partially-published checkout without duplicating orders.
+	const prior = (seller: { sellerPubkey: string; orderId: string }) =>
+		options.resume?.find((entry) => entry.sellerPubkey === seller.sellerPubkey && entry.orderId === seller.orderId)
+	const done = (seller: { sellerPubkey: string; orderId: string }, phase: SellerOrderPublishPhase) =>
+		prior(seller)?.completedPhases.includes(phase) ?? false
+	let progress: SellerOrderPublishProgress[] = work.map((seller) => {
+		const previous = prior(seller)
+		return {
+			sellerPubkey: seller.sellerPubkey,
+			orderId: seller.orderId,
+			completedPhases: previous ? [...previous.completedPhases] : [],
+			publishedEventIds: previous ? [...previous.publishedEventIds] : [],
+			paymentRequestFailures: 0,
+		}
+	})
 	const orderIds: string[] = []
 	let paymentRequestFailures = 0
 	let active: PreparedSellerOrderWork<PrivateDelivery, OrderMarker> | undefined
@@ -200,6 +211,7 @@ export async function executeSellerOrderPublishWorkflow<PrivateDelivery, OrderMa
 		active = seller
 		if (!seller.requiresPrivateDelivery) continue
 		phase = 'private_delivery'
+		if (done(seller, phase)) continue
 		if (!seller.privateDelivery) return failed(new Error('Required private seller delivery was not prepared'))
 		try {
 			const result = await ports.publishPrivateDelivery(seller)
@@ -217,7 +229,10 @@ export async function executeSellerOrderPublishWorkflow<PrivateDelivery, OrderMa
 	for (const seller of work) {
 		active = seller
 		phase = 'order_marker'
-		try {
+		if (done(seller, 'order_marker')) {
+			orderIds.push(seller.orderId)
+			if (done(seller, 'payment_request')) continue
+		} else try {
 			const result = await ports.publishOrderMarker(seller)
 			orderIds.push(seller.orderId)
 			progress = recordSellerOrderEventPublished(progress, {
