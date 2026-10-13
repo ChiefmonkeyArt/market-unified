@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@ui/primitives/button'
 import { Media } from '@/components/Media'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@ui/primitives/collapsible'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ui/primitives/select'
 import { authStore } from '@/lib/stores/auth'
 import { collectionFormActions } from '@/lib/stores/collection'
 

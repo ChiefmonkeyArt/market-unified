@@ -205,6 +205,13 @@ test.beforeEach(async () => {
 	await resetAppBlacklist()
 })
 
+// Leave no user blacklisted for later specs (devUser2 is the bidder in the
+// settlement specs; a blacklisted bidder's path release is filtered out).
+test.afterAll(async () => {
+	await resetAppBlacklist()
+	await resetAppFeaturedList()
+})
+
 test.describe('Blacklists', () => {
 	test('admin can view blacklists page with tabs', async ({ merchantPage }) => {
 		await gotoAdminRoute(merchantPage, '/dashboard/app-settings/blacklists')

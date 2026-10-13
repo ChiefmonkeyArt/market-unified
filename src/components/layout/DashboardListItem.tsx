@@ -1,6 +1,6 @@
-import { Card } from '@/components/ui/card'
+import { Card } from '@ui/primitives/card'
 import { cn } from '@/lib/utils'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@ui/primitives/collapsible'
 import { ChevronLeftIcon, XIcon } from 'lucide-react'
 import * as React from 'react'
 import { WalletIcon } from 'lucide-react'

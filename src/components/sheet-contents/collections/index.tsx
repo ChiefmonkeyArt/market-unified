@@ -1,4 +1,4 @@
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@ui/primitives/sheet'
 import { collectionFormStore, DEFAULT_COLLECTION_FORM_STATE } from '@/lib/stores/collection'
 import { useStore } from '@tanstack/react-store'
 import { useEffect, useState } from 'react'

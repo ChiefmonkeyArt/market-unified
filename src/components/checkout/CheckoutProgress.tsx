@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button'
-import { Progress } from '@/components/ui/progress'
+import { Button } from '@ui/primitives/button'
+import { Progress } from '@ui/primitives/progress'
 import { ChevronLeft } from 'lucide-react'
 
 interface CheckoutProgressProps {

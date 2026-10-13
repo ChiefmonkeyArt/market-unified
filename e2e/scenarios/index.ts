@@ -503,50 +503,60 @@ export async function seedReaction(
 }
 
 /**
- * Resets entire blacklist (Users, Products, Collections) using admin secret key
+ * Publishes an empty app-signed list that is guaranteed to replace the current
+ * one. App lists (blacklist, featured) are signed with the APP key — the server
+ * re-signs admin submissions — so a reset signed by an admin user is ignored by
+ * every reader. The replacement must also be strictly newer: NIP-01 breaks a
+ * same-second tie by lowest id, so a reset in the same second as the app's own
+ * publish could silently lose and leave the previous list in force.
+ */
+async function replaceAppList(relay: Relay, kind: number, dTag?: string): Promise<void> {
+	const filter: { kinds: number[]; authors: string[]; '#d'?: string[] } = { kinds: [kind], authors: [TEST_APP_PUBLIC_KEY] }
+	if (dTag) filter['#d'] = [dTag]
+	const current = await new Promise<number>((resolve) => {
+		let newest = 0
+		const sub = relay.subscribe([filter], {
+			onevent: (event) => {
+				newest = Math.max(newest, event.created_at)
+			},
+			oneose: () => {
+				sub.close()
+				resolve(newest)
+			},
+		})
+	})
+	await publish(relay, TEST_APP_PRIVATE_KEY, {
+		kind,
+		created_at: Math.max(Math.floor(Date.now() / 1000), current + 1),
+		content: '',
+		tags: dTag ? [['d', dTag]] : [],
+	})
+}
+
+/**
+ * Resets entire blacklist (Users, Products, Collections).
  */
 export async function resetAppBlacklist() {
 	const relay = await Relay.connect(RELAY_URL)
-	const skAdmin = devUser1.sk
-
-	await publish(relay, skAdmin, {
-		kind: 10000, // NIP-51 mute list
-		created_at: Math.floor(Date.now() / 1000),
-		content: '',
-		tags: [],
-	})
-
+	try {
+		await replaceAppList(relay, 10000) // NIP-51 mute list
+	} finally {
+		relay.close()
+	}
 	console.log(`    Reset app Blacklist.`)
 }
 
 export async function resetAppFeaturedList() {
 	const relay = await Relay.connect(RELAY_URL)
-	const skAdmin = devUser1.sk
-
-	await Promise.all([
-		// Products
-		publish(relay, skAdmin, {
-			kind: 30405,
-			created_at: Math.floor(Date.now() / 1000),
-			content: '',
-			tags: [['d', 'featured_products']],
-		}),
-		// Collections
-		publish(relay, skAdmin, {
-			kind: 30003,
-			created_at: Math.floor(Date.now() / 1000),
-			content: '',
-			tags: [['d', 'featured_collections']],
-		}),
-		// Users
-		publish(relay, skAdmin, {
-			kind: 30000,
-			created_at: Math.floor(Date.now() / 1000),
-			content: '',
-			tags: [['d', 'featured_users']],
-		}),
-	])
-
+	try {
+		await Promise.all([
+			replaceAppList(relay, 30405, 'featured_products'),
+			replaceAppList(relay, 30003, 'featured_collections'),
+			replaceAppList(relay, 30000, 'featured_users'),
+		])
+	} finally {
+		relay.close()
+	}
 	console.log(`    Reset app Featured list.`)
 }
 

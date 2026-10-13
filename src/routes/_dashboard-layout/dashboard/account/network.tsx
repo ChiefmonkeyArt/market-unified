@@ -1,4 +1,4 @@
-import { RelayManager } from '@/components/ui/relay-manager'
+import { RelayManager } from '@/components/relay-manager'
 import { useDashboardTitle } from '@/routes/_dashboard-layout'
 import { createFileRoute } from '@tanstack/react-router'
 import { Globe } from 'lucide-react'

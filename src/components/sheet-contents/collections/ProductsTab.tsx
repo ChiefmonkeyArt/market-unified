@@ -1,4 +1,4 @@
-import { Checkbox } from '@/components/ui/checkbox'
+import { Checkbox } from '@ui/primitives/checkbox'
 import { Media } from '@/components/Media'
 import { authStore } from '@/lib/stores/auth'
 import { collectionFormStore, collectionFormActions } from '@/lib/stores/collection'

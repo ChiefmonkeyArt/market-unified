@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Media } from '@/components/Media'
-import { Input } from '@/components/ui/input'
+import { Input } from '@ui/primitives/input'
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
 	useProductSearch,

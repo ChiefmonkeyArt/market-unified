@@ -1,6 +1,6 @@
 import CartItem from '@/components/CartItem'
-import { Button } from '@/components/ui/button'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { Button } from '@ui/primitives/button'
+import { ScrollArea } from '@ui/primitives/scroll-area'
 import { cartActions, cartStore } from '@/lib/stores/cart'
 import { uiActions } from '@/lib/stores/ui'
 import { useAutoAnimate } from '@formkit/auto-animate/react'

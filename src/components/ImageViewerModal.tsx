@@ -1,7 +1,7 @@
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTitle } from '@ui/primitives/dialog'
 import { getMediaExtension, isVideoUrl } from '@/lib/media'
 import { Media } from '@/components/Media'
-import { Button } from '@/components/ui/button'
+import { Button } from '@ui/primitives/button'
 import { X, ZoomIn, ZoomOut, RotateCw, Download, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useState, useEffect } from 'react'
 

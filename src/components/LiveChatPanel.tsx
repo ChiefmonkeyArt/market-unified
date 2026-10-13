@@ -9,7 +9,7 @@ import { getAuctionStartAt, getAuctionBiddingCutoffAt } from '@/lib/auctionSettl
 import { LiveChatMessageBubble } from './LiveChatMessage'
 import { useStore } from '@tanstack/react-store'
 import { authStore } from '@/lib/stores/auth'
-import { Button } from './ui/button'
+import { Button } from '@ui/primitives/button'
 import { cn } from '@/lib/utils'
 
 interface LiveChatPanelProps {

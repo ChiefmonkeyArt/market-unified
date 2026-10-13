@@ -1,7 +1,7 @@
 import { NDKEvent } from '@nostr-dev-kit/ndk'
 import * as React from 'react'
 import { useEffect, useRef, useState } from 'react'
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover'
+import { Popover, PopoverContent, PopoverTrigger } from '@ui/primitives/popover'
 import { usePublishReactionMutation } from '@/publish/reactions'
 import { useEventReactions } from '@/queries/reactions'
 import { useAuth } from '@/lib/stores/auth'

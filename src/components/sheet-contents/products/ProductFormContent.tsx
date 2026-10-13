@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@ui/primitives/button'
 import { TooltipButton } from '@/components/shared/TooltipButton'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ui/primitives/tabs'
 import { ndkActions } from '@/lib/stores/ndk'
 import { productFormActions, productFormStore, type ProductFormTab } from '@/lib/stores/product'
 

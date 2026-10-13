@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@ui/primitives/button'
 import { Media } from '@/components/Media'
-import { Card } from '@/components/ui/card'
+import { Card } from '@ui/primitives/card'
 import { getCoordsFromATag } from '@/lib/utils/coords'
 import { fetchProductByATag, getProductImages, getProductTitle, productKeys } from '@/queries/products'
 import { useQuery } from '@tanstack/react-query'

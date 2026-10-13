@@ -1,13 +1,10 @@
-import { type ClassValue, clsx } from 'clsx'
-import { twMerge } from 'tailwind-merge'
 import { toast } from 'sonner'
 import { HEX_KEYS_REGEX } from './constants'
 import { EMAIL_REGEX } from './constants'
 import { decode, npubEncode } from 'nostr-tools/nip19'
 
-export function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs))
-}
+// One class-merge helper for the whole app; the implementation lives in ui/.
+export { cn } from '@ui/utils/cn'
 
 export function truncateText(text: string, maxLength: number): string {
 	if (text.length <= maxLength) return text

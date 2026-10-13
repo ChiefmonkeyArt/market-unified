@@ -1,4 +1,4 @@
-import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@ui/primitives/sheet'
 import { cartStore } from '@/lib/stores/cart'
 import { useStore } from '@tanstack/react-store'
 import { CartContent } from './CartContent'

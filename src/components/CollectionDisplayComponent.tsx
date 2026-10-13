@@ -1,6 +1,6 @@
-import { Button } from '@/components/ui/button'
+import { Button } from '@ui/primitives/button'
 import { Media } from '@/components/Media'
-import { Card } from '@/components/ui/card'
+import { Card } from '@ui/primitives/card'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { collectionQueryOptions, getCollectionTitle, getCollectionSummary, getCollectionImages } from '@/queries/collections'

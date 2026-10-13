@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import { LoaderCircle, Trophy, X } from 'lucide-react'
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@ui/primitives/dialog'
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -15,8 +15,8 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
+} from '@ui/primitives/alert-dialog'
+import { Button } from '@ui/primitives/button'
 import { Media } from '@/components/Media'
 import { UserCard } from '@/components/UserCard'
 import { ConfettiBurst } from '@/components/ConfettiBurst'

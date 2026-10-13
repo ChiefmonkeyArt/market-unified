@@ -4,7 +4,7 @@ import { useZapCapability } from '@/queries/profiles'
 import { NDKEvent, NDKUser } from '@nostr-dev-kit/ndk'
 import * as React from 'react'
 import { useState } from 'react'
-import { Spinner } from '../ui/spinner'
+import { Spinner } from '@ui/primitives/spinner'
 import { TooltipButton } from '../shared/TooltipButton'
 import type { ButtonProps } from '../shared/ButtonProps'
 
