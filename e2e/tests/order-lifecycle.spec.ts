@@ -49,9 +49,16 @@ async function checkoutToPaymentStep(page: Page) {
 }
 
 test.describe('Order Lifecycle', () => {
-	test.skip('partial payment: pay merchant, skip V4V, then complete from order detail', async ({ buyerPage }) => {
+	test('partial payment: pay merchant, skip V4V, then complete from order detail', async ({ buyerPage }) => {
 		test.setTimeout(120_000)
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
+		// Receipts from the previous test can land inside the 5 s look-back
+		// window; count only receipts this test produced.
+		const priorReceiptIds = new Set(
+			(await queryRelayEvents({ kinds: [17], authors: [devUser2.pk], since: testStartTime })).map((e) => e.id),
+		)
+		const newReceipts = async () =>
+			(await queryRelayEvents({ kinds: [17], authors: [devUser2.pk], since: testStartTime })).filter((e) => !priorReceiptIds.has(e.id))
 		const lnMock = await LightningMock.setup(buyerPage)
 
 		// ─── 1. Checkout with partial payment ─────────────────────────
@@ -83,11 +90,7 @@ test.describe('Order Lifecycle', () => {
 		expect(lnMock.paidInvoices.length).toBe(1)
 
 		// Verify only 1 payment receipt on relay
-		const receiptsAfterCheckout = await queryRelayEvents({
-			kinds: [17],
-			authors: [devUser2.pk],
-			since: testStartTime,
-		})
+		const receiptsAfterCheckout = await newReceipts()
 		expect(receiptsAfterCheckout.length).toBe(1)
 
 		// ─── 2. Navigate to order detail and pay remaining invoice ────
@@ -100,7 +103,7 @@ test.describe('Order Lifecycle', () => {
 		await orderLink.click()
 
 		// Wait for order detail page to load
-		await expect(buyerPage.getByText('Order ID:')).toBeVisible({ timeout: 15_000 })
+		await expect(buyerPage.getByRole('heading', { name: 'Order Details' })).toBeVisible({ timeout: 15_000 })
 
 		// Find the first unpaid V4V invoice and click Pay (multiple may exist)
 		const payButton = buyerPage.getByRole('button', { name: /Pay.*sats/i }).first()
@@ -131,15 +134,11 @@ test.describe('Order Lifecycle', () => {
 		expect(orderCreations.length).toBeGreaterThanOrEqual(1)
 
 		// Payment receipts (Kind 17) — both merchant and V4V should now exist
-		const allReceipts = await queryRelayEvents({
-			kinds: [17],
-			authors: [devUser2.pk],
-			since: testStartTime,
-		})
+		const allReceipts = await newReceipts()
 		expect(allReceipts.length).toBe(2)
 	})
 
-	test.skip('full order lifecycle: pending → confirmed → shipped → completed', async ({ buyerPage, merchantPage }) => {
+	test('full order lifecycle: pending → confirmed → shipped → completed', async ({ buyerPage, merchantPage }) => {
 		test.setTimeout(120_000)
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
 		const lnMock = await LightningMock.setup(buyerPage)
@@ -155,9 +154,11 @@ test.describe('Order Lifecycle', () => {
 		await expect(merchantPage.getByText('Loading sales...')).toBeVisible({ timeout: 15_000 })
 
 		// Wait for order with Pending status
-		await merchantPage.waitForFunction(() => document.body.innerText.includes('sats') && document.body.innerText.includes('Pending'), {
-			timeout: 15_000,
-		})
+		await merchantPage.waitForFunction(
+			() => document.body.innerText.includes('sats') && /confirm payment received/i.test(document.body.innerText),
+			undefined,
+			{ timeout: 15_000 },
+		)
 
 		// Click the first (most recent) order link
 		const merchantOrderLink = merchantPage.locator('a[href^="/dashboard/orders/"]:visible').first()
@@ -165,34 +166,37 @@ test.describe('Order Lifecycle', () => {
 		await merchantOrderLink.click()
 
 		// Wait for order detail page
-		await expect(merchantPage.getByText('Order ID:')).toBeVisible({ timeout: 15_000 })
+		await expect(merchantPage.getByRole('heading', { name: 'Order Details' })).toBeVisible({ timeout: 15_000 })
 
 		// ─── 3. Merchant confirms order ───────────────────────────────
-		const confirmBtn = merchantPage.getByRole('button', { name: 'Confirm', exact: true })
+		const confirmBtn = merchantPage.getByRole('button', { name: 'Confirm Payment Received' })
 		await expect(confirmBtn).toBeVisible({ timeout: 10_000 })
 		await confirmBtn.click()
 
-		// Confirm dialog: click "Confirm Payment Received"
-		const confirmDialogBtn = merchantPage.getByRole('button', { name: 'Confirm Payment Received' })
-		await expect(confirmDialogBtn).toBeVisible({ timeout: 5_000 })
-		await confirmDialogBtn.click()
+		// Confirm dialog: click "Confirm Payment"
+		const confirmDialog = merchantPage.getByRole('dialog', { name: 'Confirm Payment Received' })
+		await expect(confirmDialog).toBeVisible({ timeout: 5_000 })
+		await confirmDialog.getByRole('button', { name: 'Confirm Payment', exact: true }).click()
 
-		// Wait for status to change — Process button appears when status is Confirmed
-		await expect(merchantPage.getByRole('button', { name: 'Process', exact: true })).toBeVisible({ timeout: 15_000 })
+		// Wait for status to change — Process Order appears when status is Confirmed
+		const processBtn = merchantPage.getByRole('button', { name: 'Process Order' })
+		await expect(processBtn).toBeVisible({ timeout: 15_000 })
 
 		// ─── 4. Merchant processes order ──────────────────────────────
-		await merchantPage.getByRole('button', { name: 'Process', exact: true }).click()
+		await processBtn.click()
 
-		// Wait for Ship button to appear (status is now Processing)
-		await expect(merchantPage.getByRole('button', { name: 'Ship', exact: true })).toBeVisible({ timeout: 15_000 })
+		// Wait for Mark As Shipped to appear (status is now Processing)
+		const shipBtn = merchantPage.getByRole('button', { name: 'Mark As Shipped' })
+		await expect(shipBtn).toBeVisible({ timeout: 15_000 })
 
 		// ─── 5. Merchant ships order ──────────────────────────────────
-		await merchantPage.getByRole('button', { name: 'Ship', exact: true }).click()
+		await shipBtn.click()
 
-		// Shipping dialog: enter tracking URL and save
-		await expect(merchantPage.getByRole('heading', { name: 'Shipping Information' })).toBeVisible({ timeout: 5_000 })
-		await merchantPage.locator('#tracking').fill('https://tracking.test/e2e-123')
-		await merchantPage.getByRole('button', { name: 'Save' }).click()
+		// Shipping dialog: enter tracking URL and confirm
+		const shipDialog = merchantPage.getByRole('dialog', { name: 'Mark Order As Shipped' })
+		await expect(shipDialog).toBeVisible({ timeout: 5_000 })
+		await shipDialog.locator('#tracking').fill('https://tracking.test/e2e-123')
+		await shipDialog.getByRole('button', { name: 'Mark As Shipped' }).click()
 
 		// StockUpdateDialog opens automatically after shipping — dismiss it
 		await expect(merchantPage.getByText('Update Product Stock')).toBeVisible({ timeout: 10_000 })
@@ -211,10 +215,10 @@ test.describe('Order Lifecycle', () => {
 		await buyerOrderLink.click()
 
 		// Wait for order detail — should show Shipped status and Received button
-		await expect(buyerPage.getByText('Order ID:')).toBeVisible({ timeout: 15_000 })
+		await expect(buyerPage.getByRole('heading', { name: 'Order Details' })).toBeVisible({ timeout: 15_000 })
 		await expect(buyerPage.getByText('Shipped', { exact: true })).toBeVisible({ timeout: 15_000 })
 
-		const receivedBtn = buyerPage.getByRole('button', { name: 'Received' })
+		const receivedBtn = buyerPage.getByRole('button', { name: "I've Received This Item" })
 		await expect(receivedBtn).toBeVisible({ timeout: 10_000 })
 		await receivedBtn.click()
 

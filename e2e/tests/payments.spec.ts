@@ -433,7 +433,9 @@ async function skipAllInvoices(page: Page): Promise<void> {
 			.isVisible()
 			.catch(() => false)) === false
 	) {
-		const skipButton = page.getByRole('button', { name: /skip payment|pay later/i })
+		// After a skip the panel shows "Payment Skipped" with a Next Payment
+		// button; otherwise the current invoice offers Skip/Pay Later.
+		const skipButton = page.getByRole('button', { name: /skip payment|pay later|next payment/i })
 		await expect(skipButton.first()).toBeVisible({ timeout: 10_000 })
 		await neutralizeBlockingToasts(page)
 		await skipButton.first().click()
@@ -456,7 +458,7 @@ test.describe('Checkout Flow', () => {
 		await expect(buyerPage.getByRole('button', { name: /continue shopping/i })).toBeVisible()
 	})
 
-	test.skip('full checkout flow with mocked Lightning invoices', async ({ buyerPage }) => {
+	test('full checkout flow with mocked Lightning invoices', async ({ buyerPage }) => {
 		await setupLnurlMock(buyerPage)
 
 		await test.step('Add product and proceed to checkout', async () => {
@@ -479,7 +481,7 @@ test.describe('Checkout Flow', () => {
 		})
 	})
 
-	test.skip('checkout publishes order events to relay', async ({ buyerPage }) => {
+	test('checkout publishes order events to relay', async ({ buyerPage }) => {
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
 
 		await setupLnurlMock(buyerPage)
@@ -514,7 +516,7 @@ test.describe('Checkout Flow', () => {
 		}).toPass({ timeout: 20_000 })
 	})
 
-	test.skip('allows buyer to defer an invoice and continue checkout', async ({ buyerPage }) => {
+	test('allows buyer to defer an invoice and continue checkout', async ({ buyerPage }) => {
 		await setupLnurlMock(buyerPage)
 
 		await addProductAndGoToCheckout(buyerPage)
@@ -529,6 +531,9 @@ test.describe('Checkout Flow', () => {
 
 		await expect(buyerPage.getByText(/1 of \d+ completed/i)).toBeVisible({ timeout: 15_000 })
 		await expect(buyerPage.getByText(/skipped/i).first()).toBeVisible({ timeout: 10_000 })
+		// Checkout continues: Next Payment moves to the next invoice, which can
+		// itself be deferred.
+		await buyerPage.getByRole('button', { name: /next payment/i }).click()
 		await expect(buyerPage.getByRole('button', { name: /pay later/i })).toBeVisible({ timeout: 10_000 })
 	})
 })

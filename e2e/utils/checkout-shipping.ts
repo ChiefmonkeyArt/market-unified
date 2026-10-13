@@ -17,11 +17,14 @@ export async function checkoutFromCartDrawer(page: Page): Promise<void> {
 
 /**
  * Picks `option` for every item that still has no shipping method on the
- * checkout page. Returns how many selectors were set.
+ * checkout page (none if all are already set). Returns how many selectors were set.
  */
 export async function selectShippingOnCheckout(page: Page, option: RegExp): Promise<number> {
 	const triggers = page.getByText('Select shipping method')
-	await expect(triggers.first()).toBeVisible({ timeout: 15_000 })
+	// A persisted cart can arrive with every method already chosen; wait for
+	// the shipping step, then pick only what is still unset.
+	await expect(page.getByText('Shipping Address', { exact: true })).toBeVisible({ timeout: 15_000 })
+	await expect(triggers.or(page.getByText(/^Shipping cost:/)).first()).toBeVisible({ timeout: 15_000 })
 	const count = await triggers.count()
 	for (let i = 0; i < count; i++) {
 		await triggers.first().click()

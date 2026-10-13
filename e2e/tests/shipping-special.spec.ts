@@ -41,7 +41,7 @@ test.describe('Shipping Special Cases', () => {
 
 	// Skipped: checkout/payment flow has deeper CI failures beyond this PR's scope.
 	// Selector fixes are kept so the tests pass once the checkout flow is stable.
-	test.skip('digital delivery checkout completes without shipping cost', async ({ buyerPage }) => {
+	test('digital delivery checkout completes without shipping cost', async ({ buyerPage }) => {
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
 		await LightningMock.setup(buyerPage)
 
@@ -65,7 +65,8 @@ test.describe('Shipping Special Cases', () => {
 		await expect(buyerPage.locator('#country')).not.toBeVisible()
 		await expect(buyerPage.locator('#city')).not.toBeVisible()
 
-		// ─── 4. Submit form (no required fields for digital delivery) ─
+		// ─── 4. Submit form (digital delivery only needs a contact email) ─
+		await buyerPage.locator('#email').fill('buyer@example.test')
 		await dismissToasts(buyerPage)
 		await buyerPage.locator('button[form="shipping-form"]').click()
 
@@ -86,7 +87,7 @@ test.describe('Shipping Special Cases', () => {
 		await expect(orderLink).toBeVisible({ timeout: 15_000 })
 		await orderLink.click()
 
-		await expect(buyerPage.getByText('Order ID:')).toBeVisible({ timeout: 30_000 })
+		await expect(buyerPage.getByRole('heading', { name: 'Order Details' })).toBeVisible({ timeout: 30_000 })
 
 		// ─── 8. Verify order detail ──────────────────────────────────
 		await expect(buyerPage.getByText('5000 sats')).toBeVisible({ timeout: 10_000 })
@@ -122,7 +123,7 @@ test.describe('Shipping Special Cases', () => {
 
 	// Skipped: checkout/payment flow has deeper CI failures beyond this PR's scope.
 	// Selector fixes are kept so the tests pass once the checkout flow is stable.
-	test.skip('local pickup checkout shows pickup address and hides shipping form', async ({ buyerPage }) => {
+	test('local pickup checkout shows pickup address and hides shipping form', async ({ buyerPage }) => {
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
 		await LightningMock.setup(buyerPage)
 
@@ -172,7 +173,7 @@ test.describe('Shipping Special Cases', () => {
 		await expect(orderLink).toBeVisible({ timeout: 15_000 })
 		await orderLink.click()
 
-		await expect(buyerPage.getByText('Order ID:')).toBeVisible({ timeout: 30_000 })
+		await expect(buyerPage.getByRole('heading', { name: 'Order Details' })).toBeVisible({ timeout: 30_000 })
 
 		// ─── 8. Verify order detail ──────────────────────────────────
 		await expect(buyerPage.getByText('10000 sats')).toBeVisible({ timeout: 10_000 })

@@ -8,7 +8,7 @@ import { devUser1, devUser2 } from '../../src/lib/fixtures'
 test.use({ scenario: 'merchant' })
 
 test.describe('Checkout', () => {
-	test.skip('buyer can complete a full purchase with shipping', async ({ buyerPage, merchantPage }) => {
+	test('buyer can complete a full purchase with shipping', async ({ buyerPage, merchantPage }) => {
 		test.setTimeout(90_000)
 		const testStartTime = Math.floor(Date.now() / 1000) - 5
 
@@ -114,8 +114,12 @@ test.describe('Checkout', () => {
 
 		// Wait for order rows to render (innerText only returns visible text,
 		// avoiding the hidden mobile-layout duplicates)
-		await merchantPage.waitForFunction(() => document.body.innerText.includes('sats') && document.body.innerText.includes('Pending'), {
-			timeout: 15_000,
-		})
+		// A pending sale renders its amount plus the seller's confirm action
+		// (the list no longer prints a literal "Pending" label).
+		await merchantPage.waitForFunction(
+			() => document.body.innerText.includes('sats') && /confirm payment received/i.test(document.body.innerText),
+			undefined,
+			{ timeout: 15_000 },
+		)
 	})
 })
