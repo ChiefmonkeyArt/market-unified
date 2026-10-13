@@ -113,11 +113,14 @@ async function safeGoto(page: Page, url: string): Promise<void> {
  * Wait until the products feed has loaded — the seeded control product is
  * visible — before asserting on absence/presence of the target product.
  */
+/**
+ * Wait until the browse feed has rendered its first page. (It used to wait for
+ * a specific seeded product, which falls off the first page once earlier specs
+ * have published products.)
+ */
 async function waitForProductsFeedLoaded(page: Page): Promise<void> {
-	await expect(async () => {
-		const content = await page.locator('main').textContent()
-		expect(content).toContain('Bitcoin Hardware Wallet')
-	}).toPass({ timeout: 30_000 })
+	await expect(page.locator('[data-testid="product-card"]').first()).toBeVisible({ timeout: 30_000 })
+	await page.waitForLoadState('networkidle').catch(() => {})
 }
 
 /** Dismiss the root-level PII warning dialog if it intercepts pointer events. */

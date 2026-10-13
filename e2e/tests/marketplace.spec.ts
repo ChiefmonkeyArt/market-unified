@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from '../fixtures'
 import { LightningMock } from '../utils/lightning-mock'
+import { revealProductCard } from '../utils/product-grid'
 import { checkoutFromCartDrawer, selectShippingOnCheckout } from '../utils/checkout-shipping'
 import { devUser2 } from '../../src/lib/fixtures'
 import { nip19 } from 'nostr-tools'
@@ -44,11 +45,9 @@ async function addProductsFromBothSellers(page: Page): Promise<void> {
 	await safeGoto(page, '/products')
 
 	// Wait for products from both sellers to be visible
-	await expect(async () => {
-		const content = await page.locator('main').textContent()
-		expect(content).toContain('Bitcoin Hardware Wallet')
-		expect(content).toContain('Lightning Node Setup Guide')
-	}).toPass({ timeout: 30_000 })
+	// Page through the grid if needed (seeded products fall off page one in full runs)
+	await revealProductCard(page, 'Bitcoin Hardware Wallet')
+	await revealProductCard(page, 'Lightning Node Setup Guide')
 
 	// --- Add devUser1's product ---
 	const wallet = page.locator('[data-testid="product-card"]').filter({ hasText: 'Bitcoin Hardware Wallet' })
@@ -166,11 +165,9 @@ test.describe('Marketplace Display', () => {
 		await safeGoto(newUserPage, '/products')
 
 		// Wait for products from both merchants to load
-		await expect(async () => {
-			const content = await newUserPage.locator('main').textContent()
-			expect(content).toContain('Bitcoin Hardware Wallet')
-			expect(content).toContain('Lightning Node Setup Guide')
-		}).toPass({ timeout: 30_000 })
+		// Page through the grid if needed (seeded products fall off page one in full runs)
+		await revealProductCard(newUserPage, 'Bitcoin Hardware Wallet')
+		await revealProductCard(newUserPage, 'Lightning Node Setup Guide')
 
 		// Verify product cards are visible
 		const walletCard = newUserPage.locator('[data-testid="product-card"]').filter({ hasText: 'Bitcoin Hardware Wallet' })
