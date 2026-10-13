@@ -1,5 +1,5 @@
 import { test, expect } from '../fixtures'
-import { addCardToCart, revealProductCard } from '../utils/product-grid'
+import { addSeededProductToCartDirect } from '../utils/product-grid'
 import { LightningMock } from '../utils/lightning-mock'
 import { payAllInvoicesWithWebLn } from '../utils/payment-waits'
 import { queryRelayEvents, filterByTag } from '../utils/relay-query'
@@ -12,16 +12,18 @@ test.use({ scenario: 'merchant' })
  * Helper: find a specific product by name, add to cart, and open the cart.
  */
 async function addProductAndOpenCart(page: Page, productName: string) {
-	await page.goto('/products')
+	// Open the product page directly (checkout is under test here, not browsing)
+	await addSeededProductToCartDirect(page, productName)
 
-	// Find the specific product card by name
-	await addCardToCart(page, await revealProductCard(page, productName))
-
-	// Open cart
-	await page
-		.getByRole('button')
-		.filter({ has: page.locator('.i-basket') })
-		.click()
+	// Adding from the product page opens the cart drawer itself; open it only if it is not already open.
+	const cartHeading = page.getByRole('heading', { name: /your cart/i })
+	if (!(await cartHeading.isVisible().catch(() => false))) {
+		await page
+			.getByRole('button')
+			.filter({ has: page.locator('.i-basket') })
+			.click()
+	}
+	await expect(cartHeading).toBeVisible({ timeout: 10_000 })
 }
 
 /**

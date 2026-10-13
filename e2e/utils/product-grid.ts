@@ -1,4 +1,5 @@
 import { expect, type Locator, type Page } from '@playwright/test'
+import { getTagValue, queryRelayEvents } from './relay-query'
 
 /**
  * The /products grid shows one page and a "Load More Products" button. Seeded
@@ -45,4 +46,32 @@ export async function addCardToCart(page: Page, card: Locator): Promise<void> {
 	const before = await cartBadgeCount(page)
 	await card.getByRole('button', { name: /add to cart/i }).click()
 	await expect.poll(() => cartBadgeCount(page), { timeout: 15_000 }).toBeGreaterThan(before)
+}
+
+/**
+ * Adds a seeded product to the cart from its own page, found by title on the
+ * relay. Use this when the test is about checkout, not browsing: paging the
+ * grid gets slow once a full run has published many products.
+ */
+export async function addSeededProductToCartDirect(page: Page, title: string): Promise<void> {
+	const events = await queryRelayEvents({ kinds: [30402] })
+	// Other specs publish products with the same title; the seeded one has the
+	// title's slug as its d-tag (e.g. 'bitcoin-e-book'), so prefer that.
+	const slug = title
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-|-$/g, '')
+	const matches = events.filter((event) => getTagValue(event, 'title') === title).sort((a, b) => b.created_at - a.created_at)
+	const product = matches.find((event) => getTagValue(event, 'd') === slug) ?? matches[0]
+	if (!product) throw new Error(`addSeededProductToCartDirect: no product titled "${title}" on the relay`)
+	await page.goto(`/products/${product.id}`)
+	await expect(page.getByText(title).first()).toBeVisible({ timeout: 15_000 })
+	await page
+		.getByRole('button', { name: /^add to cart$/i })
+		.first()
+		.click()
+	// Adding here opens the cart drawer; the item showing in it is the signal
+	// (the header badge sits behind the drawer's overlay).
+	const cart = page.getByRole('dialog', { name: /your cart/i })
+	await expect(cart.getByText(title).first()).toBeVisible({ timeout: 15_000 })
 }

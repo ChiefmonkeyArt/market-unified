@@ -53,6 +53,10 @@ and passes any extra arguments to Playwright.
    disabled ("Valid product price is required") while the form showed a USD price.
 5. Resumable partial multi-seller checkout (PR #1412 left a "Do not retry" dead end).
 6. Seller product form crash on create/edit (PR #1412 tab order).
+7. "Add to cart" on the product detail page stored the product under its event id instead of its d-tag, so orders
+   placed that way referenced `30402:<seller>:<event id>` (no such listing) and the same product added from its card
+   and its page became two cart lines. Covered by `shipping-special.spec.ts`, which now adds from the product page
+   and checks the order's `item` reference.
 
 ## Findings for the owner (not changed)
 

@@ -599,9 +599,12 @@ function RouteComponent() {
 		// Check if we have a valid product and it's not hidden
 		if (!product || visibility === 'hidden') return
 
-		// Just add the product ID to the cart with the specified quantity
+		// The cart (and every order built from it) identifies a product by its
+		// d-tag, so orders reference it as 30402:<seller>:<d-tag>. The route param
+		// is the event id; using it here produced unresolvable order references
+		// and a second cart line for a product already added from its card.
 		await cartActions.addProduct({
-			id: productId,
+			id: productDTag || productId,
 			amount: quantity,
 			shippingMethodId: null,
 			shippingMethodName: null,
