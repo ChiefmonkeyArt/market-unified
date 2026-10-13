@@ -1,3 +1,4 @@
+import { nextReplaceableCreatedAt } from '@/lib/nostr/replaceable'
 import { submitAppSettings } from '@/lib/appSettings'
 import { fetchLatestAppEvent, ndkActions } from '@/lib/stores/ndk'
 import { configKeys } from '@/queries/queryKeyFactory'
@@ -25,8 +26,15 @@ export interface FeaturedUsersData {
 /**
  * Creates a Kind 30405 featured products event (Collection format)
  */
-export const createFeaturedProductsEvent = (data: FeaturedProductsData, signer: NDKSigner, ndk: NDK): NDKEvent => {
+export const createFeaturedProductsEvent = (
+	data: FeaturedProductsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): NDKEvent => {
 	const event = new NDKEvent(ndk)
+	// Strictly newer than the version this edit was computed from (NIP-01 same-second tie).
+	event.created_at = nextReplaceableCreatedAt(previousCreatedAt)
 	event.kind = FEATURED_ITEMS_CONFIG.PRODUCTS.kind
 	event.content = 'Featured products collection'
 
@@ -48,8 +56,15 @@ export const createFeaturedProductsEvent = (data: FeaturedProductsData, signer: 
 /**
  * Creates a Kind 30003 featured collections event (NIP-51 list)
  */
-export const createFeaturedCollectionsEvent = (data: FeaturedCollectionsData, signer: NDKSigner, ndk: NDK): NDKEvent => {
+export const createFeaturedCollectionsEvent = (
+	data: FeaturedCollectionsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): NDKEvent => {
 	const event = new NDKEvent(ndk)
+	// Strictly newer than the version this edit was computed from (NIP-01 same-second tie).
+	event.created_at = nextReplaceableCreatedAt(previousCreatedAt)
 	event.kind = FEATURED_ITEMS_CONFIG.COLLECTIONS.kind
 	event.content = ''
 
@@ -68,8 +83,15 @@ export const createFeaturedCollectionsEvent = (data: FeaturedCollectionsData, si
 /**
  * Creates a Kind 30409 featured auctions event
  */
-export const createFeaturedAuctionsEvent = (data: FeaturedAuctionsData, signer: NDKSigner, ndk: NDK): NDKEvent => {
+export const createFeaturedAuctionsEvent = (
+	data: FeaturedAuctionsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): NDKEvent => {
 	const event = new NDKEvent(ndk)
+	// Strictly newer than the version this edit was computed from (NIP-01 same-second tie).
+	event.created_at = nextReplaceableCreatedAt(previousCreatedAt)
 	event.kind = FEATURED_ITEMS_CONFIG.AUCTIONS.kind
 	event.content = ''
 
@@ -85,8 +107,15 @@ export const createFeaturedAuctionsEvent = (data: FeaturedAuctionsData, signer: 
 /**
  * Creates a Kind 30000 featured users event (NIP-51 list)
  */
-export const createFeaturedUsersEvent = (data: FeaturedUsersData, signer: NDKSigner, ndk: NDK): NDKEvent => {
+export const createFeaturedUsersEvent = (
+	data: FeaturedUsersData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): NDKEvent => {
 	const event = new NDKEvent(ndk)
+	// Strictly newer than the version this edit was computed from (NIP-01 same-second tie).
+	event.created_at = nextReplaceableCreatedAt(previousCreatedAt)
 	event.kind = FEATURED_ITEMS_CONFIG.USERS.kind
 	event.content = ''
 
@@ -105,7 +134,12 @@ export const createFeaturedUsersEvent = (data: FeaturedUsersData, signer: NDKSig
 /**
  * Publishes featured products through WebSocket interface
  */
-export const publishFeaturedProducts = async (data: FeaturedProductsData, signer: NDKSigner, ndk: NDK): Promise<string> => {
+export const publishFeaturedProducts = async (
+	data: FeaturedProductsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): Promise<string> => {
 	// Validate all product coordinates
 	for (const coords of data.featuredProducts) {
 		if (!validateCoordinates(coords, 30402)) {
@@ -114,7 +148,7 @@ export const publishFeaturedProducts = async (data: FeaturedProductsData, signer
 	}
 
 	// Create and sign the event
-	const event = createFeaturedProductsEvent(data, signer, ndk)
+	const event = createFeaturedProductsEvent(data, signer, ndk, previousCreatedAt)
 	await event.sign(signer)
 
 	// Submit through WebSocket interface
@@ -126,7 +160,12 @@ export const publishFeaturedProducts = async (data: FeaturedProductsData, signer
 /**
  * Publishes featured collections through WebSocket interface
  */
-export const publishFeaturedCollections = async (data: FeaturedCollectionsData, signer: NDKSigner, ndk: NDK): Promise<string> => {
+export const publishFeaturedCollections = async (
+	data: FeaturedCollectionsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): Promise<string> => {
 	// Validate all collection coordinates
 	for (const coords of data.featuredCollections) {
 		if (!validateCoordinates(coords, 30405)) {
@@ -135,7 +174,7 @@ export const publishFeaturedCollections = async (data: FeaturedCollectionsData, 
 	}
 
 	// Create and sign the event
-	const event = createFeaturedCollectionsEvent(data, signer, ndk)
+	const event = createFeaturedCollectionsEvent(data, signer, ndk, previousCreatedAt)
 	await event.sign(signer)
 
 	// Submit through WebSocket interface
@@ -147,14 +186,19 @@ export const publishFeaturedCollections = async (data: FeaturedCollectionsData, 
 /**
  * Publishes featured auctions through WebSocket interface
  */
-export const publishFeaturedAuctions = async (data: FeaturedAuctionsData, signer: NDKSigner, ndk: NDK): Promise<string> => {
+export const publishFeaturedAuctions = async (
+	data: FeaturedAuctionsData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): Promise<string> => {
 	for (const coords of data.featuredAuctions) {
 		if (!validateCoordinates(coords, 30408)) {
 			throw new Error(`Invalid auction coordinates format: ${coords}`)
 		}
 	}
 
-	const event = createFeaturedAuctionsEvent(data, signer, ndk)
+	const event = createFeaturedAuctionsEvent(data, signer, ndk, previousCreatedAt)
 	await event.sign(signer)
 	await submitAppSettings(event.rawEvent())
 	return event.id
@@ -163,7 +207,12 @@ export const publishFeaturedAuctions = async (data: FeaturedAuctionsData, signer
 /**
  * Publishes featured users through WebSocket interface
  */
-export const publishFeaturedUsers = async (data: FeaturedUsersData, signer: NDKSigner, ndk: NDK): Promise<string> => {
+export const publishFeaturedUsers = async (
+	data: FeaturedUsersData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): Promise<string> => {
 	// Validate all user pubkeys
 	for (const pubkey of data.featuredUsers) {
 		if (!validatePubkey(pubkey)) {
@@ -172,7 +221,7 @@ export const publishFeaturedUsers = async (data: FeaturedUsersData, signer: NDKS
 	}
 
 	// Create and sign the event
-	const event = createFeaturedUsersEvent(data, signer, ndk)
+	const event = createFeaturedUsersEvent(data, signer, ndk, previousCreatedAt)
 	await event.sign(signer)
 
 	// Submit through WebSocket interface
@@ -210,7 +259,7 @@ export const addToFeaturedProducts = async (productCoords: string, signer: NDKSi
 	// Add new product to the end of the list
 	const updatedProducts = [...currentProducts, productCoords]
 
-	return publishFeaturedProducts({ featuredProducts: updatedProducts }, signer, ndk)
+	return publishFeaturedProducts({ featuredProducts: updatedProducts }, signer, ndk, currentEvent?.created_at)
 }
 
 /**
@@ -247,7 +296,7 @@ export const removeFromFeaturedProducts = async (
 	// Remove product from the list
 	const updatedProducts = currentProducts.filter((coords: string) => coords !== productCoords)
 
-	return publishFeaturedProducts({ featuredProducts: updatedProducts }, signer, ndk)
+	return publishFeaturedProducts({ featuredProducts: updatedProducts }, signer, ndk, currentEvent?.created_at)
 }
 
 /**
@@ -286,7 +335,7 @@ export const addToFeaturedCollections = async (
 	}
 
 	const updatedCollections = [...currentCollections, collectionCoords]
-	return publishFeaturedCollections({ featuredCollections: updatedCollections }, signer, ndk)
+	return publishFeaturedCollections({ featuredCollections: updatedCollections }, signer, ndk, currentEvent?.created_at)
 }
 
 export const removeFromFeaturedCollections = async (
@@ -315,7 +364,7 @@ export const removeFromFeaturedCollections = async (
 	}
 
 	const updatedCollections = currentCollections.filter((coords: string) => coords !== collectionCoords)
-	return publishFeaturedCollections({ featuredCollections: updatedCollections }, signer, ndk)
+	return publishFeaturedCollections({ featuredCollections: updatedCollections }, signer, ndk, currentEvent?.created_at)
 }
 
 export const reorderFeaturedCollections = async (orderedCollections: string[], signer: NDKSigner, ndk: NDK): Promise<string> => {
@@ -349,7 +398,7 @@ export const addToFeaturedAuctions = async (auctionCoords: string, signer: NDKSi
 	}
 
 	const updatedAuctions = [...currentAuctions, auctionCoords]
-	return publishFeaturedAuctions({ featuredAuctions: updatedAuctions }, signer, ndk)
+	return publishFeaturedAuctions({ featuredAuctions: updatedAuctions }, signer, ndk, currentEvent?.created_at)
 }
 
 export const removeFromFeaturedAuctions = async (
@@ -381,7 +430,7 @@ export const removeFromFeaturedAuctions = async (
 	}
 
 	const updatedAuctions = currentAuctions.filter((coords: string) => coords !== auctionCoords)
-	return publishFeaturedAuctions({ featuredAuctions: updatedAuctions }, signer, ndk)
+	return publishFeaturedAuctions({ featuredAuctions: updatedAuctions }, signer, ndk, currentEvent?.created_at)
 }
 
 export const reorderFeaturedAuctions = async (orderedAuctions: string[], signer: NDKSigner, ndk: NDK): Promise<string> => {
@@ -412,7 +461,7 @@ export const addToFeaturedUsers = async (userPubkey: string, signer: NDKSigner, 
 	}
 
 	const updatedUsers = [...currentUsers, userPubkey]
-	return publishFeaturedUsers({ featuredUsers: updatedUsers }, signer, ndk)
+	return publishFeaturedUsers({ featuredUsers: updatedUsers }, signer, ndk, currentEvent?.created_at)
 }
 
 export const removeFromFeaturedUsers = async (userPubkey: string, signer: NDKSigner, ndk: NDK, appPubkey?: string): Promise<string> => {
@@ -436,7 +485,7 @@ export const removeFromFeaturedUsers = async (userPubkey: string, signer: NDKSig
 	}
 
 	const updatedUsers = currentUsers.filter((pubkey: string) => pubkey !== userPubkey)
-	return publishFeaturedUsers({ featuredUsers: updatedUsers }, signer, ndk)
+	return publishFeaturedUsers({ featuredUsers: updatedUsers }, signer, ndk, currentEvent?.created_at)
 }
 
 export const reorderFeaturedUsers = async (orderedUsers: string[], signer: NDKSigner, ndk: NDK): Promise<string> => {

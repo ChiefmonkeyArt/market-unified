@@ -57,6 +57,10 @@ and passes any extra arguments to Playwright.
    placed that way referenced `30402:<seller>:<event id>` (no such listing) and the same product added from its card
    and its page became two cart lines. Covered by `shipping-special.spec.ts`, which now adds from the product page
    and checks the order's `item` reference.
+8. Admin list edits (blacklist, featured products/collections/auctions/users) made within the same second could be
+   lost: each version was stamped "now", and NIP-01 keeps the lower id on a same-second tie, so "add then remove"
+   could leave the user blacklisted. Each edit is now strictly newer than the version it was computed from
+   (`src/lib/nostr/replaceable.ts`, unit-tested). Reorders still stamp "now" (they do not read the current list).
 
 ## Findings for the owner (not changed)
 

@@ -1,4 +1,5 @@
 import { submitAppSettings } from '@/lib/appSettings'
+import { nextReplaceableCreatedAt } from '@/lib/nostr/replaceable'
 import { ndkActions } from '@/lib/stores/ndk'
 import { fetchBlacklistSettings } from '@/queries/blacklist'
 import { configKeys } from '@/queries/queryKeyFactory'
@@ -15,9 +16,11 @@ export interface BlacklistData {
 /**
  * Creates a Kind 10000 blacklist event (NIP-51 mute list)
  */
-const createBlacklistEvent = (blacklistData: BlacklistData, signer: NDKSigner, ndk: NDK): NDKEvent => {
+const createBlacklistEvent = (blacklistData: BlacklistData, signer: NDKSigner, ndk: NDK, previousCreatedAt?: number | null): NDKEvent => {
 	const event = new NDKEvent(ndk)
 	event.kind = 10000 // NIP-51 mute list
+	// Strictly newer than the version this edit was computed from (NIP-01 same-second tie).
+	event.created_at = nextReplaceableCreatedAt(previousCreatedAt)
 	event.content = ''
 
 	// Build tags - use 'p' tags for muted pubkeys, 'a' tags for products/collections
@@ -45,7 +48,12 @@ const createBlacklistEvent = (blacklistData: BlacklistData, signer: NDKSigner, n
 /**
  * Publishes an updated blacklist through WebSocket interface
  */
-export const publishBlacklist = async (blacklistData: BlacklistData, signer: NDKSigner, ndk: NDK): Promise<string> => {
+export const publishBlacklist = async (
+	blacklistData: BlacklistData,
+	signer: NDKSigner,
+	ndk: NDK,
+	previousCreatedAt?: number | null,
+): Promise<string> => {
 	// Validate all pubkeys are valid hex strings
 	for (const pubkey of blacklistData.blacklistedPubkeys) {
 		if (!/^[0-9a-f]{64}$/i.test(pubkey)) {
@@ -54,7 +62,7 @@ export const publishBlacklist = async (blacklistData: BlacklistData, signer: NDK
 	}
 
 	// Create and sign the event normally
-	const event = createBlacklistEvent(blacklistData, signer, ndk)
+	const event = createBlacklistEvent(blacklistData, signer, ndk, previousCreatedAt)
 	await event.sign(signer)
 
 	// Submit through WebSocket interface (will be re-signed with app pubkey)
@@ -96,6 +104,7 @@ export const addToBlacklist = async (userPubkey: string, signer: NDKSigner, ndk:
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
@@ -132,6 +141,7 @@ export const removeFromBlacklist = async (userPubkey: string, signer: NDKSigner,
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
@@ -279,6 +289,7 @@ export const addToBlacklistProducts = async (productCoords: string, signer: NDKS
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
@@ -320,6 +331,7 @@ export const removeFromBlacklistProducts = async (
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
@@ -361,6 +373,7 @@ export const addToBlacklistCollections = async (
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
@@ -402,6 +415,7 @@ export const removeFromBlacklistCollections = async (
 		},
 		signer,
 		ndk,
+		currentBlacklist?.event?.created_at,
 	)
 }
 
