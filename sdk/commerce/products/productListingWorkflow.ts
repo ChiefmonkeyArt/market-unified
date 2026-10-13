@@ -1,4 +1,5 @@
 import { normalizeProductShippingSelections, type ProductShippingSelectionInput } from './productShipping'
+import { productTypeTag, type ProductFormat } from './productType'
 
 export type SellerProductStatus = 'hidden' | 'on-sale' | 'pre-order'
 export type SellerProductType = 'single' | 'variable'
@@ -12,6 +13,10 @@ export interface SellerProductListingInput {
 	currency: string
 	status: SellerProductStatus
 	productType: SellerProductType
+	format?: ProductFormat
+	/** Pass-through of type tags the form cannot express; see `PreservedTypeTags`. */
+	preservedTypeTag?: string[] | null
+	preservedParentTag?: string[]
 	mainCategory: string
 	selectedCollection: string | null
 	categories: Array<{ key: string; name: string; checked: boolean }>
@@ -24,6 +29,7 @@ export interface SellerProductListingInput {
 }
 
 export type SellerProductPublishValidationIssue =
+	| 'product-variation-parent-missing'
 	| 'product-name-required'
 	| 'product-description-required'
 	| 'product-price-invalid'
@@ -44,6 +50,8 @@ export interface SellerProductEventData {
 
 /** Preserve the current required-field validation order for create and update paths. */
 export function validateSellerProductForPublish(input: SellerProductListingInput): SellerProductPublishValidationResult {
+	if (input.preservedTypeTag?.[1] === 'variation' && !input.preservedParentTag)
+		return { ok: false, issue: 'product-variation-parent-missing' }
 	if (!input.name.trim()) return { ok: false, issue: 'product-name-required' }
 	if (!input.description.trim()) return { ok: false, issue: 'product-description-required' }
 	if (!input.price.trim() || isNaN(Number(input.price))) return { ok: false, issue: 'product-price-invalid' }
@@ -66,7 +74,8 @@ export function buildSellerProductEventData(
 		['d', productId],
 		['title', input.name],
 		['price', input.price, input.currency],
-		['type', input.productType === 'single' ? 'simple' : 'variable', 'physical'],
+		...(input.preservedTypeTag === null ? [] : [input.preservedTypeTag ?? productTypeTag(input.productType, input.format)]),
+		...(input.preservedParentTag ? [input.preservedParentTag] : []),
 		['visibility', input.status],
 		['stock', input.quantity],
 		...(input.summary ? [['summary', input.summary]] : []),

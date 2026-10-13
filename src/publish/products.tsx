@@ -17,6 +17,8 @@ export type ProductFormData = SellerProductListingInput
 
 function productPublishIssueMessage(issue: SellerProductPublishValidationIssue): string {
 	switch (issue) {
+		case 'product-variation-parent-missing':
+			return 'This variation listing has no valid parent product reference and cannot be republished'
 		case 'product-name-required':
 			return 'Product name is required'
 		case 'product-description-required':

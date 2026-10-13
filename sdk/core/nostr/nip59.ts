@@ -1,6 +1,7 @@
 import { finalizeEvent, getEventHash, getPublicKey, nip44, verifyEvent } from 'nostr-tools'
 import type { Event } from 'nostr-tools'
-import { UnsupportedSignerOperationError, type EncryptingSigner, type SignableRumorLike } from '../ports/encryptingSigner'
+import type { EventTemplate, NostrEvent } from 'nostr-tools/pure'
+import type { SignerCapability } from '../ports/signerCapability'
 
 export const NIP59_SEAL_KIND = 13
 export const NIP59_GIFT_WRAP_KIND = 1059
@@ -26,7 +27,7 @@ export type CreateNip59GiftWrapParams = {
 
 export type CreateNip59GiftWrapWithSignerParams = {
 	rumor: UnsignedRumor
-	signer: EncryptingSigner | null | undefined
+	signer: SignerCapability | null | undefined
 	recipientPubkey: string
 	wrapperPrivateKey?: Uint8Array
 	createdAt?: number
@@ -41,7 +42,7 @@ export type UnwrapNip59GiftWrapParams = {
 
 export type UnwrapNip59GiftWrapWithSignerParams = {
 	giftWrap: Event
-	signer: EncryptingSigner | null | undefined
+	signer: SignerCapability | null | undefined
 	expectedRecipientPubkey?: string
 	expectedSenderPubkey?: string
 }
@@ -214,13 +215,13 @@ export function normalizeUnsignedRumorId(rumor: unknown): UnsignedRumor {
 	}
 }
 
-export async function signerSupportsNip44(signer: EncryptingSigner | null | undefined, operation: Nip44SignerOperation): Promise<boolean> {
+export async function signerSupportsNip44(signer: SignerCapability | null | undefined, operation: Nip44SignerOperation): Promise<boolean> {
 	if (!signer) return false
-	try {
-		return await signer.supportsNip44(operation)
-	} catch {
-		return false
-	}
+	const nip44 = signer.nip44
+	if (!nip44) return false
+	if (operation === 'encrypt' && typeof nip44.encrypt !== 'function') return false
+	if (operation === 'decrypt' && typeof nip44.decrypt !== 'function') return false
+	return true
 }
 
 function unixNow(): number {
@@ -248,9 +249,9 @@ function decryptFromSender(ciphertext: string, recipientPrivateKey: Uint8Array, 
 }
 
 async function assertSignerSupportsNip44(
-	signer: EncryptingSigner | null | undefined,
+	signer: SignerCapability | null | undefined,
 	operation: Nip44SignerOperation,
-): Promise<EncryptingSigner> {
+): Promise<SignerCapability> {
 	if (!signer) {
 		throw new Error(`Signer does not support NIP-44 ${operation}`)
 	}
@@ -260,7 +261,7 @@ async function assertSignerSupportsNip44(
 	return signer
 }
 
-async function signerPubkeyFor(signer: EncryptingSigner): Promise<string> {
+async function signerPubkeyFor(signer: SignerCapability): Promise<string> {
 	const pubkey = await signer.getPublicKey()
 	assertHexPubkey(pubkey, 'signer pubkey')
 	return pubkey
@@ -268,12 +269,12 @@ async function signerPubkeyFor(signer: EncryptingSigner): Promise<string> {
 
 async function encryptForRecipientWithSigner(
 	plaintext: string,
-	signer: EncryptingSigner,
+	signer: SignerCapability,
 	recipientPubkey: string,
 	label: string,
 ): Promise<string> {
 	try {
-		return await signer.encrypt(recipientPubkey, plaintext)
+		return await signer.nip44!.encrypt(recipientPubkey, plaintext)
 	} catch {
 		throw new Error(`NIP-44 encryption failed for ${label}`)
 	}
@@ -281,36 +282,44 @@ async function encryptForRecipientWithSigner(
 
 async function decryptFromSenderWithSigner(
 	ciphertext: string,
-	signer: EncryptingSigner,
+	signer: SignerCapability,
 	senderPubkey: string,
 	label: string,
 ): Promise<string> {
 	try {
-		return await signer.decrypt(senderPubkey, ciphertext)
+		return await signer.nip44!.decrypt(senderPubkey, ciphertext)
 	} catch {
 		throw new Error(`NIP-44 decryption failed for ${label}`)
 	}
 }
 
-async function signEventWithSigner(signableEvent: SignableRumorLike, signer: EncryptingSigner, label: string): Promise<Event> {
-	let sig: string
+type SignableEvent = {
+	kind: number
+	content: string
+	created_at: number
+	tags: string[][]
+	pubkey: string
+}
+
+async function signEventWithSigner(signableEvent: SignableEvent, signer: SignerCapability, label: string): Promise<Event> {
+	if (typeof signer.signEvent !== 'function') {
+		throw new Error(`Signer does not support signing ${label}`)
+	}
+
+	let signed: NostrEvent
 	try {
-		sig = await signer.signEvent(signableEvent)
-	} catch (error) {
-		if (error instanceof UnsupportedSignerOperationError) {
-			throw new Error(`Signer does not support signing ${label}`)
-		}
+		signed = await signer.signEvent(signableEvent as EventTemplate)
+	} catch {
 		throw new Error(`Failed to sign ${label}`)
 	}
 
-	const event = {
-		...signableEvent,
-		id: getEventHash(signableEvent),
-		sig,
+	if (signed.pubkey !== signableEvent.pubkey) {
+		throw new Error(`Invalid ${label} pubkey`)
 	}
-	assertEvent(event, label)
-	if (!verifyEventSignature(event)) throw new Error(`Invalid ${label} signature`)
-	return event
+
+	assertEvent(signed, label)
+	if (!verifyEventSignature(signed)) throw new Error(`Invalid ${label} signature`)
+	return signed
 }
 
 function parseEventJson(json: string, label: string): Event {
@@ -335,9 +344,9 @@ function parseRecordJson(json: string, label: string): Record<string, unknown> {
 }
 
 function assertGiftWrap(event: Event, expectedRecipientPubkey: string): void {
-	if (!verifyEventSignature(event)) throw new Error('Invalid NIP-59 gift wrap signature')
 	assertEvent(event, 'NIP-59 gift wrap')
 	if (event.kind !== NIP59_GIFT_WRAP_KIND) throw new Error('Invalid NIP-59 gift wrap kind')
+	if (!verifyEventSignature(event)) throw new Error('Invalid NIP-59 gift wrap signature')
 	const recipientTag = event.tags[0]
 	if (event.tags.length !== 1 || recipientTag?.[0] !== 'p' || recipientTag[1] !== expectedRecipientPubkey || recipientTag.length !== 2) {
 		throw new Error('NIP-59 gift wrap recipient mismatch')
@@ -345,10 +354,10 @@ function assertGiftWrap(event: Event, expectedRecipientPubkey: string): void {
 }
 
 function assertSeal(event: Event): void {
-	if (!verifyEventSignature(event)) throw new Error('Invalid NIP-59 seal signature')
 	assertEvent(event, 'NIP-59 seal')
 	if (event.kind !== NIP59_SEAL_KIND) throw new Error('Invalid NIP-59 seal kind')
 	if (event.tags.length !== 0) throw new Error('NIP-59 seal tags must be empty')
+	if (!verifyEventSignature(event)) throw new Error('Invalid NIP-59 seal signature')
 }
 
 function verifyEventSignature(event: Event): boolean {

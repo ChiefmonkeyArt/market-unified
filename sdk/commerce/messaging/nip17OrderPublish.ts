@@ -1,6 +1,6 @@
 import type { Event } from 'nostr-tools'
-import type { EncryptingSigner } from '../../core/ports/encryptingSigner'
 import { createNip17GiftWrapsWithSigner } from '../../core/nostr/nip17'
+import type { SignerCapability } from '../../core/ports/signerCapability'
 import { resolveNip17RelayTargetsFromEvents, type Nip17DmRelayListEvent, type Nip17RelayTargetsResult } from '../../core/nostr/nip17Relays'
 import { assertOrderMessageRumor, type OrderMessageRumor } from './orderMessageRumor'
 
@@ -16,7 +16,7 @@ export type PublishNip17GiftWrapResult = unknown
 
 export type PublishNip17OrderMessageParams = {
 	rumor: OrderMessageRumor
-	signer: EncryptingSigner
+	signer: SignerCapability
 	recipientPubkey: string
 	recipientRelayEvents: Nip17DmRelayListEvent[]
 	senderRelayEvents: Nip17DmRelayListEvent[]
@@ -99,7 +99,7 @@ async function publishReadyGiftWrap(
 	}
 }
 
-async function getSignerPubkey(signer: EncryptingSigner): Promise<string> {
+async function getSignerPubkey(signer: SignerCapability): Promise<string> {
 	const pubkey = await signer.getPublicKey()
 	if (!pubkey) throw new Error('Signer pubkey unavailable')
 	return pubkey

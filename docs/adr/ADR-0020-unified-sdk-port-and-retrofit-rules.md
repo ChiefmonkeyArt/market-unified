@@ -1,4 +1,4 @@
-# ADR-0022: Unify the SDK port (PR #1412) with the market-retrofit module rules
+# ADR-0020: Unify the SDK port (PR #1412) with the market-retrofit module rules
 
 ## Status
 

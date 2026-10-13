@@ -102,17 +102,10 @@ describe('auctions NDK-surface guard (scripts/check-auctions-ndk-surface.sh)', (
 		expect(source).toContain(ALLOWLISTED_FILE)
 	})
 
-	test('the allowlisted private-claim file touches only the raw signer (keeps the allowlist honest)', async () => {
-		// The guard skips this file wholesale, so it could acquire any other NDK
-		// usage unnoticed. Pin the narrow surface the #1252 citation claims:
-		// `ndkActions.getSigner()` and a type-only NDKSigner import.
+	test('the former #1252 allowlisted private-claim file has no NDK surface left', async () => {
 		const source = await readFile(join(ROOT, ALLOWLISTED_FILE), 'utf8')
-		const ndkActionsCalls = [...source.matchAll(/ndkActions\.([A-Za-z0-9_]+)/g)].map((m) => m[1])
-		expect(ndkActionsCalls.length).toBeGreaterThan(0)
-		expect([...new Set(ndkActionsCalls)]).toEqual(['getSigner'])
-		expect(source).not.toContain('ndkStore')
-		// No value import of @nostr-dev-kit (a `import type { … }` is allowed).
-		expect(source).not.toMatch(/^import\s+(?!type\b)[^\n]*@nostr-dev-kit/m)
+		expect(source).not.toMatch(/ndkActions|ndkStore|@nostr-dev-kit/)
+		expect(source).toContain('getSignerCapability')
 	})
 
 	test('exits 0 when the production file set has no NDK surface', async () => {
@@ -141,14 +134,14 @@ describe('auctions NDK-surface guard (scripts/check-auctions-ndk-surface.sh)', (
 		expect(runGuard(store).exitCode).toBe(1)
 	})
 
-	test('exits 0 when NDK surface is confined to the #1252-allowlisted private-claim file', async () => {
+	test('fails (exit 1) when the former allowlisted private-claim file regains NDK surface', async () => {
 		const root = await stageRepo({
 			[ALLOWLISTED_FILE]: NDK_IMPORT,
 			'src/publish/auctions.tsx': "import { sign } from '@/lib/nostr/io'\n",
 		})
 		const r = runGuard(root)
-		expect(r.exitCode).toBe(0)
-		expect(r.stdout).toContain('allowlisted 1 (#1252-gated)')
+		expect(r.exitCode).toBe(1)
+		expect(r.stdout).toContain('allowlisted 0 (#1252-gated)')
 	})
 
 	test('ignores test files in the file set', async () => {

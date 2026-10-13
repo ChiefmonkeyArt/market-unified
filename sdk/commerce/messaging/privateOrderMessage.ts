@@ -1,6 +1,6 @@
 import { getPublicKey } from 'nostr-tools'
 import type { Event } from 'nostr-tools'
-import type { EncryptingSigner } from '../../core/ports/encryptingSigner'
+import type { SignerCapability } from '../../core/ports/signerCapability'
 import {
 	createNip59GiftWrap,
 	createNip59GiftWrapWithSigner,
@@ -52,7 +52,7 @@ export type CreateEncryptedPrivateOrderMessageParams = CreatePrivateOrderDetails
 }
 
 export type CreateEncryptedPrivateOrderMessageWithSignerParams = CreatePrivateOrderDetailsRumorParams & {
-	signer: EncryptingSigner | null | undefined
+	signer: SignerCapability | null | undefined
 	wrapperPrivateKey?: Uint8Array
 }
 
@@ -65,7 +65,7 @@ export type DecryptPrivateOrderMessageParams = {
 
 export type DecryptPrivateOrderMessageWithSignerParams = {
 	giftWrap: Event
-	signer: EncryptingSigner | null | undefined
+	signer: SignerCapability | null | undefined
 	expectedSellerPubkey?: string
 	expectedBuyerPubkey?: string
 }

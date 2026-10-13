@@ -44,10 +44,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REQUIRE_COVERAGE="${AUCTIONS_GUARD_REQUIRE_COVERAGE:-1}"
 
 # #1252-gated allowlist — paths relative to the repo root.
-ALLOWLIST=(
-	# NIP-59 private-claim encrypt/decrypt needs the raw active signer (PR #1252).
-	"src/lib/auctions/privateAuctionClaimMessage.ts"
-)
+# Empty since the signer-capability migration (#1252) landed: the former entry,
+# src/lib/auctions/privateAuctionClaimMessage.ts, now reads the active signer
+# through `getSignerCapability()` and has no NDK surface left.
+ALLOWLIST=()
 
 # Pinned production files that MUST exist. A missing pinned path means the guard
 # is blind: fail (when coverage is enforced) rather than count a ghost.

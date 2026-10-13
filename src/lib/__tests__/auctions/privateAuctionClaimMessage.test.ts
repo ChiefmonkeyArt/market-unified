@@ -1,4 +1,4 @@
-import { NDKUser, type NDKEncryptionScheme, type NDKSigner } from '@nostr-dev-kit/ndk'
+import type { SignerCapability } from '@sdk/core'
 import { describe, expect, test } from 'bun:test'
 import { finalizeEvent, getPublicKey, nip44 } from 'nostr-tools'
 import {
@@ -68,29 +68,15 @@ function baseFields(overrides: Partial<AuctionClaimMessageFields> = {}): Auction
 	}
 }
 
-function signerFor(privateKey: Uint8Array): NDKSigner {
+function signerFor(privateKey: Uint8Array): SignerCapability {
 	const pubkey = getPublicKey(privateKey)
-	const user = new NDKUser({ pubkey })
 	return {
-		get pubkey() {
-			return pubkey
+		getPublicKey: async () => pubkey,
+		signEvent: async (template) => finalizeEvent(template as Parameters<typeof finalizeEvent>[0], privateKey),
+		nip44: {
+			encrypt: async (recipientPubkey, value) => encryptForRecipient(value, privateKey, recipientPubkey),
+			decrypt: async (senderPubkey, value) => decryptFromSender(value, privateKey, senderPubkey),
 		},
-		blockUntilReady: async () => user,
-		user: async () => user,
-		get userSync() {
-			return user
-		},
-		encryptionEnabled: async (scheme?: NDKEncryptionScheme) => (!scheme || scheme === 'nip44' ? ['nip44'] : []),
-		encrypt: async (recipient, value, scheme) => {
-			if (scheme !== 'nip44') throw new Error('NIP-44 unavailable')
-			return encryptForRecipient(value, privateKey, recipient.pubkey)
-		},
-		decrypt: async (sender, value, scheme) => {
-			if (scheme !== 'nip44') throw new Error('NIP-44 unavailable')
-			return decryptFromSender(value, privateKey, sender.pubkey)
-		},
-		sign: async (event) => finalizeEvent(event as unknown as Parameters<typeof finalizeEvent>[0], privateKey).sig,
-		toPayload: () => JSON.stringify({ type: 'mock' }),
 	}
 }
 

@@ -1,7 +1,7 @@
-import type { NDKSigner } from '@nostr-dev-kit/ndk'
+import type { SignerCapability } from '@sdk/core'
 import type { Event } from 'nostr-tools'
 import { ORDER_MESSAGE_TYPE, ORDER_PROCESS_KIND } from '@sdk/commerce/messaging/orderSchema'
-import { ndkActions } from '@/lib/stores/ndk'
+import { getSignerCapability } from '@/lib/nostr/signer-registry'
 import {
 	createNip59GiftWrap,
 	createNip59GiftWrapWithSigner,
@@ -62,7 +62,7 @@ export type CreatePrivateAuctionClaimMessageParams = AuctionClaimMessageFields &
 }
 
 export type CreatePrivateAuctionClaimMessageWithSignerParams = AuctionClaimMessageFields & {
-	signer: NDKSigner | null | undefined
+	signer: SignerCapability | null | undefined
 	wrapperPrivateKey?: Uint8Array
 }
 
@@ -103,7 +103,7 @@ export type DecryptPrivateAuctionClaimMessageParams = ParsePrivateAuctionClaimRu
 
 export type DecryptPrivateAuctionClaimMessageWithSignerParams = ParsePrivateAuctionClaimRumorOptions & {
 	giftWrap: Event
-	signer: NDKSigner | null | undefined
+	signer: SignerCapability | null | undefined
 }
 
 export function createPrivateAuctionClaimMessage(params: CreatePrivateAuctionClaimMessageParams): PrivateAuctionClaimGiftWrap {
@@ -127,13 +127,13 @@ export function createPrivateAuctionClaimMessage(params: CreatePrivateAuctionCla
  * (NIP-44 encryption + event signing), which the library-agnostic I/O seam
  * (`@/lib/nostr/io`) does not expose. This module is allowlisted by
  * `scripts/check-auctions-ndk-surface.sh` so the signer capability is acquired
- * in ONE audited place instead of leaking `ndkActions` into the publish/query
+ * in ONE audited place instead of leaking the signer registry into the publish/query
  * lanes. Replaced by the signer capability from PR #1252 (`signer-registry`).
  */
 export async function createPrivateAuctionClaimMessageForActiveSigner(
 	params: Omit<CreatePrivateAuctionClaimMessageWithSignerParams, 'signer'>,
 ): Promise<PrivateAuctionClaimGiftWrap> {
-	const signer = ndkActions.getSigner()
+	const signer = getSignerCapability()
 	if (!signer) throw new Error('No active signer available for the private auction claim')
 	return createPrivateAuctionClaimMessageWithSigner({ ...params, signer })
 }
@@ -171,7 +171,7 @@ export function decryptPrivateAuctionClaimMessage(params: DecryptPrivateAuctionC
 export async function decryptPrivateAuctionClaimMessageForActiveSigner(
 	params: Omit<DecryptPrivateAuctionClaimMessageWithSignerParams, 'signer'>,
 ): Promise<PrivateAuctionClaimMessage> {
-	const signer = ndkActions.getSigner()
+	const signer = getSignerCapability()
 	if (!signer) throw new Error('No active signer available for the private auction claim')
 	return decryptPrivateAuctionClaimMessageWithSigner({ ...params, signer })
 }

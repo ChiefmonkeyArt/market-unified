@@ -14,7 +14,6 @@ import {
 	getProductStock,
 	getProductSummary,
 	getProductTitle,
-	getProductType,
 	getProductVisibility,
 	getProductWeight,
 	isNSFWProduct,
@@ -27,6 +26,7 @@ import {
 	type ProductShippingSelection,
 	type SellerProductFormTab,
 } from '@sdk/commerce/products'
+import { productFormTypeFromTags, type ProductFormat } from '@/lib/utils/productType'
 import { uiActions, uiStore } from '@/lib/stores/ui'
 import NDK, { type NDKSigner } from '@nostr-dev-kit/ndk'
 import { QueryClient } from '@tanstack/react-query'
@@ -76,6 +76,9 @@ export interface ProductFormState {
 	currency: string
 	status: 'hidden' | 'on-sale' | 'pre-order'
 	productType: 'single' | 'variable'
+	format: ProductFormat
+	preservedTypeTag?: string[] | null
+	preservedParentTag?: string[]
 	mainCategory: string | null
 	selectedCollection: string | null
 	specs: ProductSpec[]
@@ -105,6 +108,7 @@ export const DEFAULT_FORM_STATE: ProductFormState = {
 	currency: 'SATS',
 	status: 'on-sale',
 	productType: 'single',
+	format: 'physical',
 	mainCategory: null,
 	selectedCollection: null,
 	specs: [],
@@ -153,18 +157,29 @@ const createResetState = (
 	}
 }
 
+const saveDraftNow = () => {
+	const state = productFormStore.state
+	if (state.editingProductId) {
+		saveProductFormDraft(state.editingProductId, state).catch((error) => {
+			console.error('Failed to auto-save product form draft:', error)
+		})
+	}
+}
+
 const debouncedSave = () => {
 	cancelPendingSave()
 
 	saveTimeoutId = setTimeout(() => {
-		const state = productFormStore.state
-		if (state.editingProductId) {
-			saveProductFormDraft(state.editingProductId, state).catch((error) => {
-				console.error('Failed to auto-save product form draft:', error)
-			})
-		}
+		saveDraftNow()
 		saveTimeoutId = null
 	}, SAVE_DEBOUNCE_MS)
+}
+
+// Write a pending auto-save immediately instead of dropping it
+const flushPendingSave = () => {
+	if (!saveTimeoutId) return
+	cancelPendingSave()
+	saveDraftNow()
 }
 
 const getFreshSessionState = (state: ProductFormState, overrides: Partial<ProductFormState> = {}): ProductFormState => {
@@ -193,6 +208,15 @@ export const productFormActions = {
 		cancelPendingSave()
 
 		productFormStore.setState((state) => getFreshSessionState(state, { editingProductId: productId }))
+	},
+
+	// Leaving an edit without saving or discarding must not leave that product's state
+	// in the store for the next form session. Unsaved edits stay in the draft.
+	endEditProductSession: (productId: string) => {
+		if (productFormStore.state.editingProductId !== productId) return
+
+		flushPendingSave()
+		productFormActions.reset()
 	},
 
 	openCreateProductDrawer: () => {
@@ -236,7 +260,6 @@ export const productFormActions = {
 			const collection = getProductCollection(event)
 			const specs = getProductSpecs(event)
 			const stockTag = getProductStock(event)
-			const typeTag = getProductType(event)
 			const visibilityTag = getProductVisibility(event)
 			const weightTag = getProductWeight(event)
 			const dimensionsTag = getProductDimensions(event)
@@ -280,7 +303,7 @@ export const productFormActions = {
 					bitcoinUnit: priceCurrency === 'BTC' ? 'BTC' : 'SATS',
 					quantity: stockTag?.[1] || '',
 					status: visibilityTag?.[1] || 'hidden',
-					productType: typeTag?.[1] === 'simple' ? 'single' : 'variable',
+					...productFormTypeFromTags(event.tags),
 					mainCategory: mainCategoryFromTags || null,
 					selectedCollection: collection,
 					categories: subCategoriesFromTags || [],
@@ -452,6 +475,9 @@ export const productFormActions = {
 			currency: finalCurrency,
 			status: state.status,
 			productType: state.productType,
+			format: state.format,
+			preservedTypeTag: state.preservedTypeTag,
+			preservedParentTag: state.preservedParentTag,
 			mainCategory: state.mainCategory || '',
 			selectedCollection: state.selectedCollection,
 			categories: state.categories,

@@ -1,3 +1,4 @@
+import type { SignerCapability } from '@sdk/core'
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { finalizeEvent, getEventHash, getPublicKey, nip44 } from 'nostr-tools'
 import type { Event, UnsignedEvent } from 'nostr-tools'
@@ -45,6 +46,8 @@ type TestSigner = {
 	encrypt: (recipient: TestNDKUser, plaintext: string, scheme?: 'nip04' | 'nip44') => Promise<string>
 	decrypt: (sender: TestNDKUser, ciphertext: string, scheme?: 'nip04' | 'nip44') => Promise<string>
 	sign: (event: UnsignedEvent & { pubkey: string }) => Promise<string>
+	/** The same key exposed through the app's `SignerCapability` seam (ADR-0002 A3). */
+	capability: SignerCapability
 }
 
 function createKeyPair(): TestKeyPair {
@@ -82,6 +85,25 @@ function createSigner(privateKey: Uint8Array, options: TestSignerOptions = {}): 
 		sign: async (event: UnsignedEvent & { pubkey: string }) => {
 			if (options.signThrows) throw new Error('sign failed')
 			return finalizeEvent(event, privateKey).sig
+		},
+		capability: {
+			getPublicKey: async () => signerPubkey,
+			signEvent: async (template) => {
+				if (options.signThrows) throw new Error('sign failed')
+				return finalizeEvent(template, privateKey)
+			},
+			...(options.supportsNip44 === false
+				? {}
+				: {
+						nip44: {
+							encrypt: async (recipientPubkey: string, plaintext: string) => {
+								if (options.canEncrypt === false) throw new Error('NIP-44 encryption unavailable')
+								return nip44.v2.encrypt(plaintext, nip44.v2.utils.getConversationKey(privateKey, recipientPubkey))
+							},
+							decrypt: async (senderPubkey: string, ciphertext: string) =>
+								nip44.v2.decrypt(ciphertext, nip44.v2.utils.getConversationKey(privateKey, senderPubkey)),
+						},
+					}),
 		},
 	}
 }
@@ -153,6 +175,10 @@ mock.module('@/queries/profiles', () => ({
 			lud16: 'seller@example.com',
 		},
 	})),
+}))
+
+mock.module('@/lib/nostr/signer-registry', () => ({
+	getSignerCapability: () => currentSigner?.capability,
 }))
 
 mock.module('@/lib/stores/ndk', () => ({
