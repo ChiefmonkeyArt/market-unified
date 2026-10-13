@@ -14,10 +14,20 @@ async function addProductAndOpenCart(page: Page, productName: string) {
 	await page.goto('/products')
 
 	// Find the specific product card by name
+	// The grid loads more as you scroll; seeded products can sit below the first
+	// page once earlier specs have created products, so scroll until it appears.
 	const productCard = page.locator('[data-testid="product-card"]').filter({ hasText: productName })
+	await expect(page.locator('[data-testid="product-card"]').first()).toBeVisible({ timeout: 15_000 })
+	for (let i = 0; i < 30 && (await productCard.count()) === 0; i++) {
+		await page.mouse.wheel(0, 4000)
+		await page.waitForTimeout(500)
+	}
 	await expect(productCard).toBeVisible({ timeout: 15_000 })
+	const cartButton = page.getByRole('button').filter({ has: page.locator('.i-basket') })
+	const before = Number((await cartButton.innerText()).replace(/\D/g, '') || '0')
 	await productCard.getByRole('button', { name: /Add to Cart/i }).click()
-	await expect(productCard.getByRole('button', { name: /Add/i })).toBeVisible()
+	// Adding is async; wait for the header badge rather than the button label.
+	await expect(cartButton).toContainText(String(before + 1), { timeout: 15_000 })
 
 	// Open cart
 	await page
