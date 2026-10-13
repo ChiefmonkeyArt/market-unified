@@ -782,8 +782,13 @@ function RouteComponent() {
 		}
 	}
 
+	// Seller totals are computed asynchronously; ordering before they exist
+	// would create no order for that seller.
+	const hasAllSellerTotals = sellers.length > 0 && sellers.every((sellerPubkey) => !!sellerData[sellerPubkey])
+
 	const canContinueToPayment =
 		!!shippingData &&
+		hasAllSellerTotals &&
 		!partialOrderOutcome &&
 		deliveryRequirements.isResolved &&
 		!isDeliveryRequirementsLoading &&

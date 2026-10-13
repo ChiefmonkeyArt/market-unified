@@ -4,6 +4,7 @@ import { payAllInvoicesWithWebLn, waitForWebLnButton } from '../utils/payment-wa
 import { queryRelayEvents, filterByTag, getTagValue } from '../utils/relay-query'
 import { devUser1, devUser2 } from '../../src/lib/fixtures'
 import type { Page } from '@playwright/test'
+import { checkoutFromCartDrawer, selectShippingOnCheckout } from '../utils/checkout-shipping'
 
 test.use({ scenario: 'merchant' })
 
@@ -19,23 +20,15 @@ async function checkoutToPaymentStep(page: Page) {
 	await productCard.getByRole('button', { name: /Add to Cart/i }).click()
 	await expect(productCard.getByRole('button', { name: /Add/i })).toBeVisible()
 
-	// Open cart, select shipping
+	// Open cart, proceed to checkout, select shipping there
 	await page
 		.getByRole('button')
 		.filter({ has: page.locator('.i-basket') })
 		.click()
-	const shippingTrigger = page.getByText('Select shipping method')
-	await expect(shippingTrigger).toBeVisible({ timeout: 10_000 })
-	await shippingTrigger.click()
-	await page.getByText(/Worldwide Standard/).click()
-
-	// Proceed to checkout
-	const checkoutButton = page.getByRole('button', { name: /Checkout/i })
-	await expect(checkoutButton).toBeEnabled({ timeout: 5_000 })
-	await checkoutButton.click()
+	await checkoutFromCartDrawer(page)
+	await selectShippingOnCheckout(page, /Worldwide Standard/)
 
 	// Fill shipping form
-	await expect(page.getByText('Shipping Address', { exact: true })).toBeVisible({ timeout: 10_000 })
 	await page.locator('#name').fill('E2E Test Buyer')
 	await page.locator('#firstLineOfAddress').fill('123 Test Street, Apt 4B')
 	await page.locator('#zipPostcode').fill('SW1A 1AA')

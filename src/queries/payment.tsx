@@ -1053,7 +1053,9 @@ export const generateInvoice = async (params: GenerateInvoiceParams): Promise<Ge
 			amount: amountSats,
 			bolt11: invoice.paymentRequest,
 			lightningAddress: lnAddress,
-			expiresAt: invoice.expiry,
+			// `Invoice.expiry` is a duration in seconds; `expiresAt` is a unix
+			// timestamp (seconds) everywhere else in the app.
+			expiresAt: invoice.expiryDate ? Math.floor(invoice.expiryDate.getTime() / 1000) : undefined,
 			status: 'pending',
 			isZap: generatedViaZap,
 		}

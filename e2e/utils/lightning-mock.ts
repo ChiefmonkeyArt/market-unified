@@ -18,6 +18,7 @@ import { getPublicKey } from 'nostr-tools/pure'
 import { hexToBytes } from '@noble/hashes/utils.js'
 import WebSocket from 'ws'
 import { RELAY_URL } from '../test-config'
+import { encodeMockBolt11 } from './bolt11'
 
 useWebSocketImplementation(WebSocket)
 
@@ -31,6 +32,11 @@ const LNURL_SERVER_PK = getPublicKey(hexToBytes(LNURL_SERVER_SK))
 const MOCK_LNURL_DOMAIN = 'coinos.io'
 
 let invoiceCounter = 0
+
+/** Username part of the `ln` lightning address in an Alby proxy URL. */
+function lnUsername(url: string): string {
+	return (new URL(url).searchParams.get('ln') || '').split('@')[0] || ''
+}
 
 export class LightningMock {
 	/** The last zap request (Kind 9734 JSON) captured from an LNURL callback. */
@@ -80,21 +86,38 @@ export class LightningMock {
 
 		// --- Layer 1: Intercept LNURL HTTP requests ---
 
+		const lnurlpMetadata = {
+			callback: `https://${MOCK_LNURL_DOMAIN}/lnurlp/callback`,
+			maxSendable: 100_000_000_000, // 100k sats in msats
+			minSendable: 1_000, // 1 sat in msats
+			metadata: JSON.stringify([['text/plain', 'Mock LNURL for e2e tests']]),
+			tag: 'payRequest',
+			allowsNostr: true,
+			nostrPubkey: LNURL_SERVER_PK,
+		}
+
+		/** Mints a fake but unique BOLT11 and records any zap request for it. */
+		const issueInvoice = (params: URLSearchParams): string => {
+			// The app decodes invoices, so mint a real (signed, unpayable) BOLT11.
+			const amountMsat = Number(params.get('amount') || '21000')
+			const { bolt11 } = encodeMockBolt11({
+				amountMsat,
+				description: params.get('comment') || `Mock invoice ${++invoiceCounter}`,
+			})
+			mock.lastBolt11 = bolt11
+
+			// Capture zap request if present (Kind 9734 JSON, URL-encoded)
+			const nostrParam = params.get('nostr')
+			if (nostrParam) {
+				mock.lastZapRequest = nostrParam
+				mock.zapRequestsByBolt11.set(bolt11, nostrParam)
+			}
+			return bolt11
+		}
+
 		// LNURL-pay discovery: any request to .well-known/lnurlp/
 		await page.route('**/.well-known/lnurlp/*', async (route) => {
-			await route.fulfill({
-				status: 200,
-				contentType: 'application/json',
-				body: JSON.stringify({
-					callback: `https://${MOCK_LNURL_DOMAIN}/lnurlp/callback`,
-					maxSendable: 100_000_000_000, // 100k sats in msats
-					minSendable: 1_000, // 1 sat in msats
-					metadata: JSON.stringify([['text/plain', 'Mock LNURL for e2e tests']]),
-					tag: 'payRequest',
-					allowsNostr: true,
-					nostrPubkey: LNURL_SERVER_PK,
-				}),
-			})
+			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(lnurlpMetadata) })
 		})
 
 		// LNURL callback: invoice generation.
@@ -103,30 +126,29 @@ export class LightningMock {
 		// evaluates routes in reverse order (last registered wins), so a broad
 		// `https://domain/**` glob would intercept discovery requests too.
 		await page.route(`https://${MOCK_LNURL_DOMAIN}/lnurlp/callback**`, async (route) => {
-			const url = new URL(route.request().url())
+			const bolt11 = issueInvoice(new URL(route.request().url()).searchParams)
+			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ pr: bolt11, routes: [] }) })
+		})
 
-			// Extract amount for a more realistic-looking invoice
-			const amountMsats = url.searchParams.get('amount') || '21000'
-
-			// Generate a fake but unique BOLT11 string
-			const bolt11 = `lnbc${amountMsats}n1mock${++invoiceCounter}${Date.now()}`
-			mock.lastBolt11 = bolt11
-
-			// Capture zap request if present (Kind 9734 JSON, URL-encoded)
-			const nostrParam = url.searchParams.get('nostr')
-			if (nostrParam) {
-				mock.lastZapRequest = nostrParam
-				mock.zapRequestsByBolt11.set(bolt11, nostrParam)
-			}
-
+		// @getalby/lightning-tools resolves lightning addresses through Alby's
+		// LNURL proxy by default (checkout's generateInvoice uses it), so mock the
+		// proxy's two endpoints with the same metadata and invoice minting.
+		await page.route('https://api.getalby.com/lnurl/lightning-address-details**', async (route) => {
 			await route.fulfill({
 				status: 200,
 				contentType: 'application/json',
+				// `nostr` mirrors /.well-known/nostr.json so the app takes the NIP-57
+				// zap path and the WebLN mock's zap receipt confirms the payment.
 				body: JSON.stringify({
-					pr: bolt11,
-					routes: [],
+					lnurlp: lnurlpMetadata,
+					keysend: null,
+					nostr: { names: { [lnUsername(route.request().url())]: LNURL_SERVER_PK } },
 				}),
 			})
+		})
+		await page.route('https://api.getalby.com/lnurl/generate-invoice**', async (route) => {
+			const bolt11 = issueInvoice(new URL(route.request().url()).searchParams)
+			await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ invoice: { pr: bolt11, routes: [] } }) })
 		})
 
 		return mock

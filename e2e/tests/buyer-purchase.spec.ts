@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures'
+import { checkoutFromCartDrawer, selectShippingOnCheckout } from '../utils/checkout-shipping'
 
 test.use({ scenario: 'merchant' })
 
@@ -34,13 +35,12 @@ test.describe('Buyer Purchase Flow', () => {
 			.filter({ has: buyerPage.locator('.i-basket') })
 			.click()
 
-		// Wait for cart content to load and shipping options to appear
-		const shippingTrigger = buyerPage.getByText('Select shipping method')
-		await expect(shippingTrigger).toBeVisible({ timeout: 10_000 })
+		// The drawer defers shipping to checkout; pick it on the checkout page.
+		await expect(buyerPage.getByText(/Select shipping at checkout for 2 items/)).toBeVisible({ timeout: 10_000 })
+		await checkoutFromCartDrawer(buyerPage)
 
-		// Select "Worldwide Standard" shipping (5,000 sats)
-		await shippingTrigger.click()
-		await buyerPage.getByText(/Worldwide Standard/).click()
+		// Select "Worldwide Standard" shipping (5,000 sats) for each item
+		await selectShippingOnCheckout(buyerPage, /Worldwide Standard/)
 
 		// Wait for totals to update after shipping selection
 		// Subtotal: 50,000 + 15,000 = 65,000 sat
@@ -59,8 +59,7 @@ test.describe('Buyer Purchase Flow', () => {
 		await expect(buyerPage.getByText('6,500 sat')).toBeVisible()
 		await expect(buyerPage.getByText('68,500 sat')).toBeVisible()
 
-		// Checkout button should be enabled now that shipping is selected
-		const checkoutButton = buyerPage.getByRole('button', { name: /Checkout/i })
-		await expect(checkoutButton).toBeEnabled()
+		// The shipping-step warning clears once every item has a method
+		await expect(buyerPage.getByText(/please select shipping for/i)).toHaveCount(0)
 	})
 })

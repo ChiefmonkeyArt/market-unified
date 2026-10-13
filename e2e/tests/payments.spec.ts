@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from '../fixtures'
+import { checkoutFromCartDrawer, selectShippingOnCheckout } from '../utils/checkout-shipping'
 import { setupLnurlMock } from '../helpers/lnurl-mock'
 import { queryRelayEvents, filterByTag } from '../utils/relay-query'
 import { WALLETED_USER_LUD16, devUser1, devUser2 } from '../../src/lib/fixtures'
@@ -390,17 +391,8 @@ async function addProductAndGoToCheckout(page: Page): Promise<void> {
 		.click()
 
 	await expect(page.getByRole('heading', { name: /your cart/i })).toBeVisible({ timeout: 10_000 })
-	const cartDialog = page.getByRole('dialog', { name: /your cart/i })
-	const shippingCombobox = cartDialog.getByRole('combobox')
-	await expect(shippingCombobox).toBeVisible({ timeout: 5_000 })
-	await shippingCombobox.click()
-	await page.getByRole('option', { name: /worldwide standard/i }).click()
-
-	const checkoutButton = cartDialog.getByRole('button', { name: /^checkout$/i })
-	await expect(checkoutButton).toBeEnabled({ timeout: 5_000 })
-	await checkoutButton.click()
-
-	await expect(page.getByText('Shipping Address', { exact: true })).toBeVisible({ timeout: 15_000 })
+	await checkoutFromCartDrawer(page)
+	await selectShippingOnCheckout(page, /worldwide standard/i)
 }
 
 /**

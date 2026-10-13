@@ -629,7 +629,9 @@ export const ndkActions = {
 	 */
 	connectZapNdk: async (timeoutMs = 10000): Promise<void> => {
 		const state = ndkStore.state
-		if (!state.zapNdk) return
+		// External zap relays disabled (staging, CI/E2E): receipts are watched on
+		// the app relay through the main NDK instead, so connect that one.
+		if (!state.zapNdk) return await ndkActions.connect(timeoutMs)
 		if (state.isZapNdkConnected) return
 		if (connectZapPromise) return await connectZapPromise
 
@@ -982,7 +984,11 @@ export const ndkActions = {
 	 */
 	createZapReceiptSubscription: (onZapEvent: (event: NDKEvent) => void, bolt11?: string): (() => void) => {
 		const state = ndkStore.state
-		if (!state.zapNdk || !state.isZapNdkConnected) {
+		// Without external zap relays, zap receipts can only arrive on the app
+		// relay, so subscribe through the main NDK rather than not at all.
+		const receiptNdk = state.zapNdk ?? state.ndk
+		const receiptNdkConnected = state.zapNdk ? state.isZapNdkConnected : state.isConnected
+		if (!receiptNdk || !receiptNdkConnected) {
 			console.warn('Zap NDK not connected. Cannot create zap subscription.')
 			return () => {}
 		}
@@ -992,7 +998,7 @@ export const ndkActions = {
 			since: Math.floor(Date.now() / 1000) - 60, // Look back 1 minute for recent zaps
 		}
 
-		const subscription = state.zapNdk.subscribe(filters, { closeOnEose: false })
+		const subscription = receiptNdk.subscribe(filters, { closeOnEose: false })
 
 		subscription.on('event', (event: NDKEvent) => {
 			// If we're monitoring a specific invoice, filter by bolt11

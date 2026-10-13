@@ -106,7 +106,7 @@ export function PaymentSummary({ invoices, currentIndex, onSelectInvoice }: Paym
 										{invoice.status === 'pending' && invoice.expiresAt && (
 											<div className="text-xs text-gray-500 flex items-center gap-1">
 												<Clock className="w-3 h-3" />
-												<span>{Math.max(0, Math.floor((invoice.expiresAt - Date.now()) / 60000))}m</span>
+												<span>{Math.max(0, Math.floor((invoice.expiresAt * 1000 - Date.now()) / 60000))}m</span>
 											</div>
 										)}
 									</div>

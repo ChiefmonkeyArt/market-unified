@@ -74,9 +74,10 @@ export function OrderInvoiceTracking({
 
 	const formatTimeRemaining = (expiresAt?: number) => {
 		if (!expiresAt) return null
+		// `expiresAt` is a unix timestamp in seconds.
 		const now = Date.now()
-		if (expiresAt <= now) return 'Expired'
-		return `Expires ${formatDistance(expiresAt, now, { addSuffix: true })}`
+		if (expiresAt * 1000 <= now) return 'Expired'
+		return `Expires ${formatDistance(expiresAt * 1000, now, { addSuffix: true })}`
 	}
 
 	return (

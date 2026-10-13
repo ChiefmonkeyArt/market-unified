@@ -484,6 +484,29 @@ describe('public order privacy guard', () => {
 		expect(publishedEvents).toHaveLength(0)
 	})
 
+	test('fails closed when a seller has no computed totals yet (never publishes a zero-order checkout)', async () => {
+		const sellerA = createKeyPair()
+		const sellerB = createKeyPair()
+		const shippingA = publicShippingRef(sellerA.pubkey, 'digital')
+		const shippingB = publicShippingRef(sellerB.pubkey, 'digital')
+		shippingServices = { [shippingA]: 'digital', [shippingB]: 'digital' }
+
+		const outcome = await publishOrderWorkflowWithDependencies(
+			paramsFor({
+				productsBySeller: {
+					[sellerA.pubkey]: [{ id: 'product-a', amount: 1, shippingMethodId: shippingA }],
+					[sellerB.pubkey]: [{ id: 'product-b', amount: 1, shippingMethodId: shippingB }],
+				},
+				// Only seller A's totals have been computed so far.
+				sellerData: { [sellerA.pubkey]: { satsTotal: 1000, shippingSats: 0, shares: { sellerAmount: 1000 } } },
+			}),
+		)
+
+		expect(outcome).toMatchObject({ status: 'failed', failedSellerPubkey: sellerB.pubkey, failedPhase: 'delivery_preflight' })
+		expect(outcome.orderIds).toHaveLength(0)
+		expect(publishedEvents).toHaveLength(0)
+	})
+
 	test('pickup order can publish a sanitized public order event without encrypted private details', async () => {
 		const seller = createKeyPair()
 		const shippingRef = publicShippingRef(seller.pubkey, 'pickup')

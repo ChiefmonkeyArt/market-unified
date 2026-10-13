@@ -838,7 +838,21 @@ export async function publishOrderWorkflowWithDependencies(params: PublishOrderD
 			const sellerProducts = productsBySeller[sellerPubkey] || []
 			const data = sellerData[sellerPubkey]
 
-			if (sellerProducts.length === 0 || !data) continue
+			if (sellerProducts.length === 0) continue
+			if (!data) {
+				// Totals for this seller are still being computed. Skipping it would
+				// "publish" checkout with no order for this seller (and the payment
+				// step would wait forever for its order id), so fail before any
+				// event is signed.
+				return createSellerOrderPublishFailure({
+					orderIds,
+					progress,
+					failedSellerPubkey: sellerPubkey,
+					failedPhase: phase,
+					error: 'Order totals are still being calculated. Please try again in a moment.',
+					paymentRequestFailures,
+				})
+			}
 
 			const requirements = await resolveDeliveryRequirementsForProducts(sellerProducts)
 			preflight.push({

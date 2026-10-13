@@ -49,9 +49,12 @@ pids+=($!)
 wait_for mint "curl -sf http://localhost:3338/v1/info" 30
 
 bun run generate-routes >"$LOG_DIR/routes.log" 2>&1
+# Keep the committed (Prettier-formatted) route tree byte-identical.
+bunx prettier --write src/routeTree.gen.ts >>"$LOG_DIR/routes.log" 2>&1
 bun e2e/seed-relay.ts >"$LOG_DIR/seed.log" 2>&1
 bun dev >"$LOG_DIR/devserver.log" 2>&1 &
 pids+=($!)
 wait_for "dev server" "curl -sf http://localhost:34567/api/config" 60
 
-NODE_OPTIONS='--dns-result-order=ipv4first' bunx playwright test --config=e2e/playwright.config.ts "$@"
+# CI=true: use the services started above (the config's webServer block is for ad-hoc runs).
+CI=true NODE_OPTIONS='--dns-result-order=ipv4first' bunx playwright test --config=e2e/playwright.config.ts "$@"

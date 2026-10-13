@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures'
+import { checkoutFromCartDrawer, selectShippingOnCheckout } from '../utils/checkout-shipping'
 import { LightningMock } from '../utils/lightning-mock'
 import { payAllInvoicesWithWebLn } from '../utils/payment-waits'
 import { queryRelayEvents, filterByTag } from '../utils/relay-query'
@@ -33,18 +34,10 @@ test.describe('Checkout', () => {
 			.filter({ has: buyerPage.locator('.i-basket') })
 			.click()
 
-		const shippingTrigger = buyerPage.getByText('Select shipping method')
-		await expect(shippingTrigger).toBeVisible({ timeout: 10_000 })
-		await shippingTrigger.click()
-		await buyerPage.getByText(/Worldwide Standard/).click()
-
-		// Wait for checkout button to be enabled (shipping selected)
-		const checkoutButton = buyerPage.getByRole('button', { name: /Checkout/i })
-		await expect(checkoutButton).toBeEnabled({ timeout: 5_000 })
-		await checkoutButton.click()
+		await checkoutFromCartDrawer(buyerPage)
+		await selectShippingOnCheckout(buyerPage, /Worldwide Standard/)
 
 		// ─── 4. Fill shipping form (step: shipping) ─────────────────
-		await expect(buyerPage.getByText('Shipping Address', { exact: true })).toBeVisible({ timeout: 10_000 })
 
 		// Required fields
 		await buyerPage.locator('#name').fill('E2E Test Buyer')

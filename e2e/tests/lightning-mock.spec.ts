@@ -52,7 +52,7 @@ test.describe('Lightning Mock', () => {
 		const first = await fetchJson(page, `https://${MOCK_LNURL_DOMAIN}/lnurlp/callback?amount=21000&nostr=${zapRequest}`)
 
 		expect(first.status).toBe(200)
-		expect(first.body.pr).toMatch(/^lnbc21000n1mock/)
+		expect(first.body.pr).toMatch(/^lnbc210n1/) // 21000 msat = 210 nano-BTC; a real, decodable BOLT11
 		expect(first.body.routes).toEqual([])
 		// The callback must answer with an invoice, never discovery metadata.
 		expect(first.body.tag).toBeUndefined()
@@ -64,7 +64,7 @@ test.describe('Lightning Mock', () => {
 
 		// Each callback generates a distinct invoice (mock counter increments).
 		const second = await fetchJson(page, `https://${MOCK_LNURL_DOMAIN}/lnurlp/callback?amount=21000&nostr=${zapRequest}`)
-		expect(second.body.pr).toMatch(/^lnbc21000n1mock/)
+		expect(second.body.pr).toMatch(/^lnbc210n1/) // 21000 msat = 210 nano-BTC; a real, decodable BOLT11
 		expect(second.body.pr).not.toBe(first.body.pr)
 	})
 
@@ -75,10 +75,22 @@ test.describe('Lightning Mock', () => {
 		// Exercise the callback first, then verify discovery still returns
 		// LNURL-pay metadata — the shadowing regression flagged in review.
 		const callback = await fetchJson(page, `https://${MOCK_LNURL_DOMAIN}/lnurlp/callback?amount=1000`)
-		expect(callback.body.pr).toMatch(/^lnbc1000n1mock/)
+		expect(callback.body.pr).toMatch(/^lnbc10n1/)
 
 		const discovery = await fetchJson(page, `https://${MOCK_LNURL_DOMAIN}/.well-known/lnurlp/plebeianuser`)
 		expect(discovery.body.tag).toBe('payRequest')
 		expect(discovery.body.pr).toBeUndefined()
+	})
+	test('mocks the Alby LNURL proxy used by @getalby/lightning-tools', async ({ page }) => {
+		const mock = await LightningMock.setup(page)
+		await page.goto('about:blank')
+
+		const details = await fetchJson(page, 'https://api.getalby.com/lnurl/lightning-address-details?ln=plebeianuser%40coinos.io')
+		expect(details.body.lnurlp.tag).toBe('payRequest')
+		expect(details.body.nostr.names.plebeianuser).toBe(details.body.lnurlp.nostrPubkey)
+
+		const invoice = await fetchJson(page, 'https://api.getalby.com/lnurl/generate-invoice?ln=plebeianuser%40coinos.io&amount=45000000')
+		expect(invoice.body.invoice.pr).toMatch(/^lnbc450u1/)
+		expect(mock.lastBolt11).toBe(invoice.body.invoice.pr)
 	})
 })

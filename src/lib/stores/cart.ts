@@ -1391,11 +1391,16 @@ export const cartActions = {
 			cartActions.groupProductsBySeller()
 		}
 
-		let exchangeRates: Record<SupportedCurrency, number> | undefined
-		try {
-			exchangeRates = await cartQueryClient.fetchQuery(btcExchangeRatesQueryOptions)
-		} catch (error) {
-			console.warn('Failed to get exchange rates for seller data calculations:', error)
+		// Exchange rates are only needed to convert fiat shipping costs. Fetch them
+		// lazily so a sats-only cart never waits on the price oracle (which can
+		// take tens of seconds to time out) before seller totals exist.
+		let exchangeRatesPromise: Promise<Record<SupportedCurrency, number> | undefined> | undefined
+		const getExchangeRates = () => {
+			exchangeRatesPromise ??= cartQueryClient.fetchQuery(btcExchangeRatesQueryOptions).catch((error) => {
+				console.warn('Failed to get exchange rates for seller data calculations:', error)
+				return undefined
+			})
+			return exchangeRatesPromise
 		}
 
 		for (const [sellerPubkey, products] of Object.entries(state.productsBySeller)) {
@@ -1444,6 +1449,7 @@ export const cartActions = {
 									if (['SATS', 'SAT'].includes(upperShippingCurrency)) {
 										convertedShippingSats = Math.round(fiatShippingCost)
 									} else if (CURRENCIES.includes(upperShippingCurrency as SupportedCurrency)) {
+										const exchangeRates = await getExchangeRates()
 										if (exchangeRates) {
 											if (exchangeRates[upperShippingCurrency as SupportedCurrency] !== undefined) {
 												convertedShippingSats = cartActions.convertWithExchangeRate(
