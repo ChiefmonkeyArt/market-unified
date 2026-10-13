@@ -525,9 +525,12 @@ async function replaceAppList(relay: Relay, kind: number, dTag?: string): Promis
 			},
 		})
 	})
+	// Never stamp the future: a future reset would outrank the app's next real
+	// edit. Wait for the clock to pass the current list instead.
+	while (Math.floor(Date.now() / 1000) <= current) await new Promise((r) => setTimeout(r, 200))
 	await publish(relay, TEST_APP_PRIVATE_KEY, {
 		kind,
-		created_at: Math.max(Math.floor(Date.now() / 1000), current + 1),
+		created_at: Math.floor(Date.now() / 1000),
 		content: '',
 		tags: dTag ? [['d', dTag]] : [],
 	})
