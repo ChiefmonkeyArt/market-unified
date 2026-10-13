@@ -5,11 +5,10 @@ import { Card } from '@/components/ui/card'
 import { authStore } from '@/lib/stores/auth'
 import { cn } from '@/lib/utils'
 import { findBidderRecord } from '@/lib/auction/bidderRecords'
-import { nip60Actions } from '@/lib/stores/nip60'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { auctionKeys } from '@/queries/queryKeyFactory'
-import { usePublishAuctionSettlementMutation, type AuctionSettlementFormData } from '@/publish/auctions'
+import { publishBidderPathRelease, usePublishAuctionSettlementMutation, type AuctionSettlementFormData } from '@/publish/auctions'
 import {
 	getSettlementDescriptor,
 	type GetSettlementDescriptorInput,
@@ -124,7 +123,7 @@ export function AuctionSettlement({
 		if (!myTopBidEvent) return
 		setIsReleasing(true)
 		try {
-			const result = await nip60Actions.settleAuctionAsWinner({
+			const result = await publishBidderPathRelease({
 				bidEventId: myTopBidEvent.id,
 				releaseReason: 'settlement',
 			})

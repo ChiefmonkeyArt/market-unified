@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { publishBidderPathRelease } from '@/publish/auctions'
 import { useStore } from '@tanstack/react-store'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocation } from '@tanstack/react-router'
@@ -21,7 +22,6 @@ import { UserCard } from '@/components/UserCard'
 import { ConfettiBurst } from '@/components/ConfettiBurst'
 import { auctionWonActions, auctionWonStore } from '@/lib/stores/auctionWon'
 import { authStore } from '@/lib/stores/auth'
-import { nip60Actions } from '@/lib/stores/nip60'
 import { useAuctionCountdown } from '@/components/AuctionCountdown'
 import { getAuctionCoordinate } from '@/lib/auctionSettlement'
 import {
@@ -163,7 +163,7 @@ export function AuctionWonModal() {
 				return
 			}
 
-			await nip60Actions.settleAuctionAsWinner({
+			await publishBidderPathRelease({
 				bidEventId: active.bidEventId,
 				releaseReason: 'settlement',
 			})

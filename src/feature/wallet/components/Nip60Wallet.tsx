@@ -1,4 +1,5 @@
 import { DEFAULT_TRUSTED_MINTS } from '@/lib/constants'
+import { placeDevBidOnSeededAuction } from '@/feature/wallet/devAuctionBid'
 import { authStore } from '@/lib/stores/auth'
 import { configStore } from '@/lib/stores/config'
 import {
@@ -256,7 +257,7 @@ export function Nip60Wallet() {
 		setIsDevBidding(true)
 		try {
 			const preferredMintUrl = defaultMint || mints[0]
-			const result = await nip60Actions.placeDevBidOnSeededAuction({ preferredBidAmount, preferredMintUrl })
+			const result = await placeDevBidOnSeededAuction({ preferredBidAmount, preferredMintUrl })
 			setLastDevBid(result)
 			toast.success(`Bid placed: ${result.bidAmount.toLocaleString()} sats on "${result.auctionTitle}"`)
 		} catch (err) {

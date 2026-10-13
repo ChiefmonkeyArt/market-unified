@@ -16,9 +16,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { authStore } from '@/lib/stores/auth'
 import { getAuctionWindowValidBids } from '@/lib/auctionSettlement'
-import { nip60Actions } from '@/lib/stores/nip60'
 import { findBidderRecord } from '@/lib/auction/bidderRecords'
-import { usePublishAuctionSettlementMutation } from '@/publish/auctions'
+import { publishBidderPathRelease, usePublishAuctionSettlementMutation } from '@/publish/auctions'
 // B4: Imports for settlement validation
 import { parseAuctionEvent } from '@/lib/schemas/auction/auctionEvent'
 import { parseBidEvent } from '@/lib/schemas/auction/bidEvent'
@@ -558,7 +557,7 @@ function DashboardAuctionDetailRoute() {
 		if (!myTopBidEvent) return
 		setIsReleasing(true)
 		try {
-			await nip60Actions.settleAuctionAsWinner({
+			await publishBidderPathRelease({
 				bidEventId: myTopBidEvent.id,
 				releaseReason: 'settlement',
 			})
