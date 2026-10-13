@@ -1229,7 +1229,9 @@ export const nip60Actions = {
 					// Key material for the settlement e2e test (dev/localhost only,
 					// per the gate above). wallet.wallet (full NDKCashuWallet with
 					// seed) and wallet.seed are NOT exposed.
-					getP2pk: () => wallet.getP2pk(),
+					// Same create-and-persist path the app uses, so a key generated here
+					// survives a reload (otherwise the reloaded wallet derives a new root).
+					getP2pk: () => getOrCreateWalletP2pk(wallet),
 					privkeys: wallet.privkeys,
 				}
 			}
