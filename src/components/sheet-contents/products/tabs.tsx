@@ -15,6 +15,7 @@ import {
 	resolveProductShippingSelections,
 	applyFiatPriceEdit,
 	deriveSatsPriceFromFiat,
+	deriveFiatPriceFromSats,
 } from '@sdk/commerce/products'
 import { MempoolService } from '@/lib/utils/mempool'
 import { useBtcExchangeRates, type SupportedCurrency } from '@/queries/external'
@@ -224,6 +225,18 @@ export function DetailTab() {
 		)
 		if (derivedSats !== null) {
 			productFormActions.updateValues({ price: derivedSats })
+		}
+	}, [storeCurrencyMode, fiatPrice, price, currency, hasExchangeRates])
+
+	// Sats typed before rates loaded left fiatPrice empty; fill it once rates
+	// arrive so fiat-mode validation matches what the form displays.
+	useEffect(() => {
+		const derivedFiat = deriveFiatPriceFromSats(
+			{ currencyMode: storeCurrencyMode, fiatPrice, price, currency, hasExchangeRates },
+			convertSatsToCurrency,
+		)
+		if (derivedFiat !== null && document.activeElement?.id !== 'fiat-price') {
+			productFormActions.updateValues({ fiatPrice: derivedFiat })
 		}
 	}, [storeCurrencyMode, fiatPrice, price, currency, hasExchangeRates])
 

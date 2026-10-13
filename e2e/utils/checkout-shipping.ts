@@ -35,3 +35,23 @@ export async function selectShippingOnCheckout(page: Page, option: RegExp): Prom
 	}
 	return count
 }
+
+/**
+ * Product form shipping tab: make sure at least one shipping option is
+ * attached. Waits for options to load, then either adds the first available
+ * one or quick-creates Digital Delivery (which attaches itself).
+ */
+export async function ensureProductShippingAttached(page: Page): Promise<void> {
+	const selected = page.getByText('Selected Shipping Options')
+	const addButton = page.getByRole('button', { name: /^add$/i }).first()
+	const quickCreate = page.getByRole('button', { name: /Digital Delivery/i })
+	await expect(selected.or(addButton).or(quickCreate).first()).toBeVisible({ timeout: 15_000 })
+	if (await selected.isVisible()) return
+	if (await addButton.isVisible()) {
+		await addButton.click()
+	} else {
+		await quickCreate.click()
+	}
+	// Quick-create publishes the option first, so allow for the relay round trip.
+	await expect(selected).toBeVisible({ timeout: 20_000 })
+}

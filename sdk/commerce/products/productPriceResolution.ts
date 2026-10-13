@@ -45,6 +45,26 @@ export function deriveSatsPriceFromFiat(state: SatsDerivationState, convert: (am
 	return satsValue > 0 ? satsValue.toString() : null
 }
 
+/**
+ * Fiat mode with a sats price but no fiat price: the seller typed sats before
+ * exchange rates loaded, so the fiat sync was skipped. Once rates exist,
+ * derive the fiat price the form already displays; otherwise fiat-mode
+ * validation blocks the form with no visible way out. Never overwrites a
+ * fiat price the seller entered.
+ */
+export function deriveFiatPriceFromSats(
+	state: SatsDerivationState,
+	convertSatsToFiat: (sats: number, currency: string) => number,
+): string | null {
+	if (!state.hasExchangeRates || state.currencyMode !== 'fiat') return null
+	if (state.currency === 'SATS' || state.currency === 'BTC') return null
+	if (state.fiatPrice.trim() !== '') return null
+	const sats = parseFloat(state.price)
+	if (!(sats > 0)) return null
+	const fiat = convertSatsToFiat(sats, state.currency)
+	return fiat > 0 ? fiat.toFixed(2) : null
+}
+
 export type ProductPriceFormState = {
 	price: string
 	fiatPrice: string

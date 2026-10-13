@@ -1,4 +1,5 @@
 import { test, expect } from '../fixtures'
+import { ensureProductShippingAttached } from '../utils/checkout-shipping'
 import { devUser3 } from '../../src/lib/fixtures'
 import { resetV4VForUser } from '../scenarios'
 
@@ -65,26 +66,7 @@ test.describe('V4V Product Creation Flow', () => {
 		// --- Shipping Tab ---
 		// Either shipping options already exist (from relay data / previous runs) or we just
 		// create one via quick-create. We need at least one shipping option added to the product.
-		const addButton = newUserPage.getByRole('button', { name: /^add$/i }).first()
-		const digitalDeliveryButton = newUserPage.getByRole('button', { name: /Digital Delivery/i })
-		await expect
-			.poll(
-				async () => {
-					if (await addButton.isVisible().catch(() => false)) return 'add'
-					if (await digitalDeliveryButton.isVisible().catch(() => false)) return 'quick-create'
-					return 'loading'
-				},
-				{ timeout: 15_000 },
-			)
-			.not.toBe('loading')
-
-		if (await addButton.isVisible().catch(() => false)) {
-			await addButton.click()
-		} else if (await digitalDeliveryButton.isVisible().catch(() => false)) {
-			await digitalDeliveryButton.click()
-			await expect(newUserPage.getByRole('button', { name: /^add$/i }).first()).toBeVisible({ timeout: 5_000 })
-			await newUserPage.getByRole('button', { name: /^add$/i }).first().click()
-		}
+		await ensureProductShippingAttached(newUserPage)
 
 		// --- Publish Without V4V Blocker ---
 		// Configured-zero is a valid configured state, so product creation should

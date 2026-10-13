@@ -76,7 +76,9 @@ async function fillDetailStep(page: Page) {
 		.or(page.getByLabel(/quantity/i))
 		.fill('5')
 
-	await expect(page.getByTestId('product-next-button')).toBeEnabled({ timeout: 5_000 })
+	// In fiat mode the price only validates once exchange rates load (no
+	// currency server runs in e2e, so they can take several seconds).
+	await expect(page.getByTestId('product-next-button')).toBeEnabled({ timeout: 30_000 })
 	await page.getByTestId('product-next-button').click()
 	await expect(page.getByTestId('product-tab-spec')).toHaveAttribute('data-state', 'active')
 }

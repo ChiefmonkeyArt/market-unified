@@ -1,5 +1,6 @@
 import type { Browser, Page } from '@playwright/test'
 import { test, expect } from '../fixtures'
+import { ensureProductShippingAttached } from '../utils/checkout-shipping'
 import { setupAuthContext } from '../fixtures/auth'
 import { ensureScenario } from '../scenarios'
 import { bytesToHex } from '@noble/hashes/utils.js'
@@ -285,22 +286,7 @@ test.describe('Product Management', () => {
 		await merchantPage.getByTestId('product-next-button').click()
 
 		// --- Shipping Tab ---
-		// If shipping options are available from seeding, add one
-		const addButton = merchantPage.getByRole('button', { name: /^add$/i }).first()
-		const hasShippingOptions = await addButton.isVisible().catch(() => false)
-		if (hasShippingOptions) {
-			await addButton.click()
-		} else {
-			// Create a quick shipping option via template
-			const digitalDelivery = merchantPage.getByText('Digital Delivery')
-			const hasTemplate = await digitalDelivery.isVisible().catch(() => false)
-			if (hasTemplate) {
-				await digitalDelivery.click()
-				// Wait for it to be created and then add it
-				await expect(merchantPage.getByRole('button', { name: /^add$/i }).first()).toBeVisible({ timeout: 5_000 })
-				await merchantPage.getByRole('button', { name: /^add$/i }).first().click()
-			}
-		}
+		await ensureProductShippingAttached(merchantPage)
 
 		// --- Publish ---
 		// The app may show "Publish Product" or "Setup V4V First" depending on V4V state.
