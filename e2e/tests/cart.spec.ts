@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from '../fixtures'
+import { addCardToCart, revealProductCard } from '../utils/product-grid'
 import { devUser1, devUser2 } from '../../src/lib/fixtures'
 import { waitForLatestCartSnapshotToBeEmpty } from '../utils/relay-query'
 import { resetRemoteCartForUser } from '../scenarios'
@@ -53,48 +54,25 @@ function cartDialog(page: Page) {
 	return page.getByRole('dialog', { name: /your cart/i })
 }
 
-/**
- * Adding is async (the store fetches the product event and shipping options
- * before saving), so wait for the header cart badge before reloading or
- * navigating away; otherwise the reload interrupts the add.
- */
-async function expectCartBadge(page: Page, count: number): Promise<void> {
-	const cartButton = page.getByRole('button').filter({ has: page.locator('.i-basket') })
-	await expect(cartButton).toContainText(String(count), { timeout: 15_000 })
-}
-
 /** Add the "Bitcoin Hardware Wallet" (devUser1) to the cart from the /products page. */
 async function addWalletToCart(page: Page): Promise<void> {
-	const wallet = page.locator('[data-testid="product-card"]').filter({ hasText: 'Bitcoin Hardware Wallet' })
-	await expect(wallet).toBeVisible({ timeout: 15_000 })
-	await wallet.getByRole('button', { name: /add to cart/i }).click()
-	// Wait for the button to change indicating item was added
-	await expect(wallet.getByRole('button', { name: /add/i })).toBeVisible()
+	await addCardToCart(page, await revealProductCard(page, 'Bitcoin Hardware Wallet'))
 }
 
 /** Add the "Lightning Node Setup Guide" (devUser2) to the cart from the /products page. */
 async function addGuideToCart(page: Page): Promise<void> {
-	const guide = page.locator('[data-testid="product-card"]').filter({ hasText: 'Lightning Node Setup Guide' })
-	await expect(guide).toBeVisible({ timeout: 15_000 })
-	await guide.getByRole('button', { name: /add to cart/i }).click()
-	await expect(guide.getByRole('button', { name: /add/i })).toBeVisible()
+	await addCardToCart(page, await revealProductCard(page, 'Lightning Node Setup Guide'))
 }
 
 /** Add the "Nostr T-Shirt" (devUser1) to the cart from the /products page. */
 async function addTShirtToCart(page: Page): Promise<void> {
-	const tshirt = page.locator('[data-testid="product-card"]').filter({ hasText: 'Nostr T-Shirt' })
-	await expect(tshirt).toBeVisible({ timeout: 15_000 })
-	await tshirt.getByRole('button', { name: /add to cart/i }).click()
-	await expect(tshirt.getByRole('button', { name: /add/i })).toBeVisible()
+	await addCardToCart(page, await revealProductCard(page, 'Nostr T-Shirt'))
 }
 
-/** Wait for the /products page to display products from both sellers. */
+/** Wait for the /products page to show products from both sellers (paging through if needed). */
 async function waitForProducts(page: Page): Promise<void> {
-	await expect(async () => {
-		const content = await page.locator('main').textContent()
-		expect(content).toContain('Bitcoin Hardware Wallet')
-		expect(content).toContain('Lightning Node Setup Guide')
-	}).toPass({ timeout: 30_000 })
+	await revealProductCard(page, 'Bitcoin Hardware Wallet')
+	await revealProductCard(page, 'Lightning Node Setup Guide')
 }
 
 // ---------------------------------------------------------------------------
@@ -346,7 +324,6 @@ test.describe('Cart - Persistence', () => {
 
 		// Add another product from a different seller
 		await addGuideToCart(newUserPage)
-		await expectCartBadge(newUserPage, 2)
 
 		// Reload the page
 		await newUserPage.reload()
@@ -396,7 +373,6 @@ test.describe('Cart - Persistence', () => {
 		await safeGoto(newUserPage, '/products')
 		await waitForProducts(newUserPage)
 		await addWalletToCart(newUserPage)
-		await expectCartBadge(newUserPage, 1)
 
 		// Navigate away to a different page
 		await safeGoto(newUserPage, '/')
