@@ -119,7 +119,9 @@ function validateDraft(raw: unknown): AuctionFormDraft | null {
 		shippings,
 		trustedMints: strArray(fd.trustedMints),
 		isNSFW: fd.isNSFW === true,
-		pathIssuerPubkey: str(fd.pathIssuerPubkey),
+		// Same defaults as a fresh auction form (AuctionFormContent).
+		enableLiveChat: fd.enableLiveChat !== false,
+		auditorPubkey: str(fd.auditorPubkey),
 	}
 
 	return {

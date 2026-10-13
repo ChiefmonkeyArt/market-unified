@@ -1,4 +1,4 @@
-import { PAYMENT_DETAILS_METHOD, ZAP_RELAYS, type PaymentDetailsMethod } from '@/lib/constants'
+import { PAYMENT_DETAILS_METHOD, ZAP_RELAYS, type PaymentDetailsMethod, type RecognisedPaymentDetailsMethod } from '@/lib/constants'
 import { configStore } from '@/lib/stores/config'
 import { ndkActions } from '@/lib/stores/ndk'
 import { isValidHexKey } from '@/lib/utils'
@@ -14,7 +14,7 @@ import { paymentDetailsKeys, walletDetailsKeys } from './queryKeyFactory'
 /**
  * Payment method types as defined in the spec
  */
-export type PaymentMethod = PaymentDetailsMethod
+export type PaymentMethod = RecognisedPaymentDetailsMethod
 
 /**
  * Interface for payment details as per SPEC.md

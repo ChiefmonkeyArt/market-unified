@@ -572,7 +572,7 @@ function RouteComponent() {
 		if (invoice) {
 			try {
 				await publishPaymentReceipt({
-					invoice: { ...invoice, orderId: resolvedOrderId },
+					invoice: { ...invoice, orderId: resolvedOrderId, bolt11: invoice.bolt11 ?? undefined },
 					preimage,
 					bolt11: invoice.bolt11 || '',
 				})

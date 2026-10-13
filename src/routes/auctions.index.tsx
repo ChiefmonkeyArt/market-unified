@@ -4,7 +4,7 @@ import { AuctionFilters } from '@/components/AuctionFilters'
 import { ShowTestListingsToggle } from '@/components/ShowTestListingsToggle'
 import { AuctionSectionGrid } from '@/components/nostr/AuctionSectionGrid'
 import { ItemGrid } from '@/components/ItemGrid'
-import { Badge } from '@/components/ui/badge'
+import { SelectableBadge } from '@ui/components/SelectableBadge'
 import { Button } from '@/components/ui/button'
 import { PRODUCT_CATEGORIES } from '@/lib/constants'
 import { authStore } from '@/lib/stores/auth'
@@ -326,31 +326,31 @@ function AuctionsRoute() {
 				<div className="px-4 py-3 flex items-center justify-between gap-4">
 					<div className="hide-scrollbar overflow-x-auto flex-1">
 						<div className="flex items-center gap-2 min-w-max">
-							<Badge variant={!tag ? 'primaryActive' : 'primary'} className="cursor-pointer transition-colors" onClick={handleClearFilter}>
+							<SelectableBadge isSelected={!tag} className="cursor-pointer transition-colors" onClick={handleClearFilter}>
 								All
-							</Badge>
+							</SelectableBadge>
 							{defaultTags.map((tagName) => (
-								<Badge
+								<SelectableBadge
 									key={tagName}
-									variant={tag === tagName ? 'primaryActive' : 'primary'}
+									isSelected={tag === tagName}
 									className="cursor-pointer transition-colors"
 									onClick={() => handleTagClick(tagName)}
 								>
 									{tagName}
-								</Badge>
+								</SelectableBadge>
 							))}
 							{allTags
 								.filter((tagName) => !defaultTags.includes(tagName))
 								.slice(0, 12)
 								.map((tagName) => (
-									<Badge
+									<SelectableBadge
 										key={tagName}
-										variant={tag === tagName ? 'primaryActive' : 'primary'}
+										isSelected={tag === tagName}
 										className="cursor-pointer transition-colors"
 										onClick={() => handleTagClick(tagName)}
 									>
 										{tagName}
-									</Badge>
+									</SelectableBadge>
 								))}
 						</div>
 					</div>

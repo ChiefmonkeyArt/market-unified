@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures'
 import { RELAY_URL } from '../test-config'
 import { finalizeEvent } from 'nostr-tools/pure'
 import { Relay, useWebSocketImplementation } from 'nostr-tools/relay'
+import type { Filter } from 'nostr-tools/filter'
 import { hexToBytes } from '@noble/hashes/utils.js'
 import WebSocket from 'ws'
 import { devUser1, devUser2, devUser3 } from '../../src/lib/fixtures'
@@ -692,7 +693,9 @@ async function waitForRelayEvent(
 			resolve(null)
 		}, timeoutMs)
 
-		const sub = relay.subscribe([{ kinds: [kind], [`#${tagName}`]: [tagValue] }], {
+		const filter: Filter = { kinds: [kind] }
+		filter[`#${tagName}`] = [tagValue]
+		const sub = relay.subscribe([filter], {
 			onevent: (event) => {
 				if (event.kind !== kind) return
 				if (!event.tags.some((t) => t[0] === tagName && t[1] === tagValue)) return

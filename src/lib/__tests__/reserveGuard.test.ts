@@ -116,6 +116,7 @@ const buildBid = (auction: ParsedAuctionEvent, overrides: Partial<ParsedBidEvent
 		keyScheme: 'hd_p2pk',
 		status: 'locked',
 		...overrides,
+		legLockedAmount: overrides.legLockedAmount ?? overrides.amount ?? 5_000,
 	}
 }
 

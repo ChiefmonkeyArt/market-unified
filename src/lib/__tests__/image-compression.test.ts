@@ -27,7 +27,7 @@ describe('image-compression utilities', () => {
 				if (originalDocumentDescriptor) {
 					Object.defineProperty(globalThis, 'document', originalDocumentDescriptor)
 				} else {
-					delete (globalThis as typeof globalThis & { document?: Document }).document
+					delete (globalThis as unknown as { document?: Document }).document
 				}
 			}
 		})
@@ -116,8 +116,11 @@ describe('image-compression utilities', () => {
 					return canvas
 				},
 			} as unknown as Document
-			;(globalThis as typeof globalThis & { createImageBitmap?: typeof createImageBitmap }).createImageBitmap = async (_blob, options) => {
-				imageBitmapCalls.push(options)
+			;(globalThis as typeof globalThis & { createImageBitmap?: typeof createImageBitmap }).createImageBitmap = async (
+				_blob: ImageBitmapSource,
+				options?: ImageBitmapOptions | number,
+			) => {
+				imageBitmapCalls.push(options as ImageBitmapOptions | undefined)
 				// The orientation probe receives a 2×1 image with EXIF orientation 6.
 				// Returning 1×2 simulates Safari accepting the option but ignoring it.
 				const dimensions = imageBitmapCalls.length === 1 ? { width: 1, height: 2 } : { width: 100, height: 200 }
@@ -140,7 +143,7 @@ describe('image-compression utilities', () => {
 				if (originalDocument) {
 					;(globalThis as typeof globalThis & { document?: Document }).document = originalDocument
 				} else {
-					delete (globalThis as typeof globalThis & { document?: Document }).document
+					delete (globalThis as unknown as { document?: Document }).document
 				}
 				;(globalThis as typeof globalThis & { createImageBitmap?: typeof createImageBitmap }).createImageBitmap = originalCreateImageBitmap
 			}

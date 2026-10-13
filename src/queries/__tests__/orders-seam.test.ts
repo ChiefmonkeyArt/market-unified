@@ -67,7 +67,7 @@ describe('orders relay reads use the Wave A1b seam flip', () => {
 		})
 		const mirroredGiftWrap = { ...giftWrap }
 		const forgedGiftWrap = forgeEvent(giftWrap, { content: 'tampered-private-order-details' })
-		const fetchEvents = mock(async () => [giftWrap, mirroredGiftWrap, forgedGiftWrap])
+		const fetchEvents = mock(async (..._args: unknown[]) => [giftWrap, mirroredGiftWrap, forgedGiftWrap])
 		applesauceIo.fetchEvents = fetchEvents as typeof applesauceIo.fetchEvents
 		;(ndkActions as { getNDK: () => unknown }).getNDK = () => stubNdk()
 

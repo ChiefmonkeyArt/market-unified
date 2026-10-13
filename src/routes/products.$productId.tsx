@@ -383,7 +383,7 @@ function RouteComponent() {
 		if (!sellerShippingOptionsQuery.data || !pubkey) return []
 
 		return sellerShippingOptionsQuery.data
-			.map((event) => {
+			.map((event): RichShippingInfo | null => {
 				const info = getShippingInfo(event)
 				if (!info || !info.id || typeof info.id !== 'string' || info.id.trim().length === 0) return null
 

@@ -70,6 +70,7 @@ describe('NIP-17 DM relay resolution', () => {
 		const result = resolveNip17DmRelayListFromEvents([older, wrongAuthor, newer, wrongKind], RECIPIENT_PUBKEY)
 
 		expect(result.status).toBe('ready')
+		if (result.status !== 'ready') throw new Error('expected a ready relay list')
 		expect(result.pubkey).toBe(RECIPIENT_PUBKEY)
 		expect(result.event).toBe(newer)
 		expect(result.relays).toEqual(['wss://newer.example'])
@@ -90,6 +91,7 @@ describe('NIP-17 DM relay resolution', () => {
 		const result = resolveNip17DmRelayListFromEvents([emptyList], RECIPIENT_PUBKEY)
 
 		expect(result.status).toBe('empty')
+		if (result.status !== 'empty') throw new Error('expected an empty relay list')
 		expect(result.pubkey).toBe(RECIPIENT_PUBKEY)
 		expect(result.event).toBe(emptyList)
 		expect(result.relays).toEqual([])

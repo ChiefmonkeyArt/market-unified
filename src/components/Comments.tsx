@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import {
 	MAX_COMMENT_THREAD_DEPTH,
 	transformCommentsMapIntoThreads as transformCommentsIntoThreads,
@@ -16,7 +17,6 @@ import { ProfileName } from './ProfileName'
 import { useProfile, useProfileName } from '@/queries/profiles'
 import { npubEncode } from 'nostr-tools/nip19'
 import { UserCard } from './UserCard'
-import type { NDKEvent } from '@nostr-dev-kit/ndk'
 import SocialInteractions from './social/SocialInteractions'
 import { toast } from 'sonner'
 
@@ -27,7 +27,7 @@ interface CommentItemProps {
 
 interface CommentThreadProps {
 	comments: CommentThread[]
-	eventRoot: NDKEvent
+	eventRoot: NostrEventLike
 	replyingTo?: Comment
 	setReplyingTo: (comment?: Comment) => void
 	depth?: number
@@ -35,14 +35,14 @@ interface CommentThreadProps {
 }
 
 interface AddCommentProps {
-	targetEvent: NDKEvent
+	targetEvent: NostrEventLike
 	parentComment?: Comment
 	onCancel?: () => void
 	entityLabel?: string
 }
 
 interface CommentsProps {
-	targetEvent: NDKEvent
+	targetEvent: NostrEventLike
 	entityLabel?: string
 	testId?: string
 }

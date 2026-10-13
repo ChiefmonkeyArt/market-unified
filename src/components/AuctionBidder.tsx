@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { Button } from '@/components/ui/button'
 import { ToggleGroup } from '@/components/ui/toggle-group'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
@@ -42,7 +43,6 @@ import { UserCard } from './UserCard'
 import { AvatarUser } from './AvatarUser'
 import { computeAuctionFloorMultiplier, getAuctionMinBidCurve } from '@/lib/auctionSettlement'
 import { AUCTION_MIN_BID_LEG_SATS, AUCTION_MIN_BID_SATS } from '@sdk/commerce/auctions/constants'
-import type { NDKEvent } from '@/lib/nostr/ndk-events'
 import { toast } from 'sonner'
 import { useMemo, useState, useEffect, useCallback, useRef, type ChangeEvent, type ClipboardEvent } from 'react'
 import { useAuctionCountdown } from './AuctionCountdown'
@@ -62,9 +62,9 @@ import { AuctionBidProgressDialog } from '@/components/AuctionBidProgressDialog'
 const AUCTION_RULES_ACK_VERSION = 'v1'
 
 interface AuctionBidderProps {
-	auction: NDKEvent
+	auction: NostrEventLike
 	/** Pre-fetched bids from a parent. Skip the internal bid subscription when provided. */
-	bids?: NDKEvent[]
+	bids?: NostrEventLike[]
 	currentUserPubkey?: string
 	onBidSuccess?: () => void
 	compact?: boolean

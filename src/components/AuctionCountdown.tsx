@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { cn } from '@/lib/utils'
 import {
 	formatAuctionCountdownDetailed,
@@ -7,7 +8,6 @@ import {
 } from '@/lib/auctionCountdownLabels'
 import { useEffect, useMemo, useState } from 'react'
 import ProgressBar from './shared/ProgressBar'
-import type { NDKEvent } from '@/lib/nostr/ndk-events'
 import { getAuctionBiddingCutoffAt, getAuctionStartAt } from '@/queries/auctions'
 
 type AuctionCountdownUrgency = 'calm' | 'lastDay' | 'lastHour' | 'finalBids' | 'ended' | 'scheduled'
@@ -99,10 +99,14 @@ export function useAuctionCountdown(endAt: number, options?: { showSeconds?: boo
 
 export function AuctionCountdown({
 	auction,
+	className,
 }: {
-	auction: NDKEvent
+	auction: NostrEventLike
 	/** Retained for source compatibility; fixed-window v1 cutoff no longer depends on bids. */
-	bids?: NDKEvent[]
+	bids?: NostrEventLike[]
+	className?: string
+	/** Retained for source compatibility; the progress bar has a single size. */
+	compact?: boolean
 }) {
 	const biddingCutoffAt = getAuctionBiddingCutoffAt(auction)
 	const startTime = getAuctionStartAt(auction)
@@ -182,7 +186,7 @@ export function AuctionCountdown({
 	}, [urgency])
 
 	return (
-		<div className="w-full">
+		<div className={cn('w-full', className)}>
 			<ProgressBar label={centerLabel} progress={progress} color={color} fillDuration={1} {...progressConfig} />
 		</div>
 	)

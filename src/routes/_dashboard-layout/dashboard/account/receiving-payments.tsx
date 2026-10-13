@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { WalletSetupGuide } from '@/components/WalletSetupGuide'
-import { PAYMENT_DETAILS_METHOD, type PaymentDetailsMethod } from '@/lib/constants'
+import { PAYMENT_DETAILS_METHOD, type PaymentDetailsMethod, type RecognisedPaymentDetailsMethod } from '@/lib/constants'
 import { useNDK } from '@/lib/stores/ndk'
 import { isValidNip05 } from '@/lib/utils'
 import { deriveAddresses, isExtendedPublicKey, parsePaymentDetailsFromClipboard, paymentMethodLabels } from '@/lib/utils/paymentDetails'
@@ -345,7 +345,7 @@ function PaymentDetailForm({ paymentDetail, isOpen, onOpenChange, onSuccess }: P
 		setShowConfirmation(false)
 	}, [user])
 
-	const validatePaymentDetails = async (value: string, method: PaymentDetailsMethod): Promise<boolean | 'needsConfirmation'> => {
+	const validatePaymentDetails = async (value: string, method: RecognisedPaymentDetailsMethod): Promise<boolean | 'needsConfirmation'> => {
 		switch (method) {
 			case PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK: {
 				if (isValidNip05(value)) {
@@ -501,7 +501,7 @@ function PaymentDetailForm({ paymentDetail, isOpen, onOpenChange, onSuccess }: P
 		}
 	}
 
-	const PaymentMethodIcon = ({ method }: { method: PaymentDetailsMethod }) => {
+	const PaymentMethodIcon = ({ method }: { method: RecognisedPaymentDetailsMethod }) => {
 		switch (method) {
 			case PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK:
 				return <ZapIcon className="w-5 h-5" />
@@ -756,7 +756,7 @@ function PaymentDetailListItem({ paymentDetail, isOpen, onOpenChange, isDeleting
 		}
 	}
 
-	const PaymentMethodIcon = ({ method }: { method: PaymentDetailsMethod }) => {
+	const PaymentMethodIcon = ({ method }: { method: RecognisedPaymentDetailsMethod }) => {
 		switch (method) {
 			// case PAYMENT_DETAILS_METHOD.ON_CHAIN:
 			// 	return <AnchorIcon className="w-5 h-5 text-muted-foreground" />

@@ -59,10 +59,10 @@ fs.writeFileSync(
 import type { RelayGroup as RelayGroupType } from '../../../node_modules/applesauce-relay/dist/group.js'
 import type { RelayPool as RelayPoolType } from '../../../node_modules/applesauce-relay/dist/pool.js'
 
-const { RelayPool } = (await import('applesauce-relay-hermetic/dist/pool.js')) as {
+const { RelayPool } = (await import('applesauce-relay-hermetic/dist/pool.js')) as unknown as {
 	RelayPool: typeof RelayPoolType
 }
-const { RelayGroup } = (await import('applesauce-relay-hermetic/dist/group.js')) as {
+const { RelayGroup } = (await import('applesauce-relay-hermetic/dist/group.js')) as unknown as {
 	RelayGroup: typeof RelayGroupType
 }
 

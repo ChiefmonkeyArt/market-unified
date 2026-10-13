@@ -1,4 +1,4 @@
-import { getEventAddress } from '@sdk/core/nostr/eventLike'
+import { getEventAddress, type NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { type Comment } from '@/queries/comments'
 import { ndkActions } from '@/lib/stores/ndk'
 import { commentKeys } from '@/queries/queryKeyFactory'
@@ -10,7 +10,7 @@ import { createCommentTemplate } from '@sdk/commerce/messaging'
 
 interface PublishCommentParams {
 	content: string
-	targetEvent: NDKEvent // The event being commented on (Product, Comment, etc.)
+	targetEvent: NostrEventLike // The event being commented on (Product, Comment, etc.)
 	parentComment?: Comment // For replies to other comments
 }
 

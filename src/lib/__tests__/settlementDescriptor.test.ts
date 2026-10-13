@@ -453,15 +453,14 @@ describe('getSettlementDescriptor', () => {
 			)
 			// With a terminal keyset miss and no other valid bid, there is no
 			// canonical winner, so the seller sees Reserve Not Met (close allowed).
-			// The descriptor result exposes only `validatedTopBid`/`validatedBids`
-			// (empty for both `pending` and `dleq_invalid`), so the invalid-vs-pending
+			// The descriptor exposes no validated-bid list (only the display fields),
+			// so the invalid-vs-pending
 			// classification itself is pinned directly in
 			// `computeValidatedBids.test.ts`; this test drives the descriptor path
 			// with `dleqUnknownKeysets` supplied, covering the pre-pass threading
 			// (review 2026-09-18 N2).
 			expect(d?.title).toBe('Reserve Not Met')
-			expect(d?.validatedTopBid ?? null).toBeNull()
-			expect(d?.validatedBids ?? []).toHaveLength(0)
+			expect(d?.verifiedBadge).not.toBe('settlement')
 		})
 	})
 

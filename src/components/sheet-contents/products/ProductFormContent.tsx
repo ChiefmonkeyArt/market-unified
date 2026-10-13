@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button'
+import { TooltipButton } from '@/components/shared/TooltipButton'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ndkActions } from '@/lib/stores/ndk'
 import { productFormActions, productFormStore, type ProductFormTab } from '@/lib/stores/product'
@@ -397,7 +398,7 @@ export function ProductFormContent({
 									// Check if we need V4V setup for new products
 									if (resolvedWorkflow.requiresV4VSetup && !editingProductId && !hasValidationErrors) {
 										return (
-											<Button
+											<TooltipButton
 												type="button"
 												variant="secondary"
 												className="flex-1 uppercase"
@@ -412,7 +413,7 @@ export function ProductFormContent({
 												data-testid="product-setup-v4v-button"
 											>
 												Setup V4V First
-											</Button>
+											</TooltipButton>
 										)
 									}
 

@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import React, { useEffect, useState } from 'react'
 import {
 	ScatterChart,
@@ -14,7 +15,6 @@ import {
 } from 'recharts'
 import type { LabelPosition } from 'recharts/types/component/Label'
 import { UserCard } from './UserCard'
-import type { NDKEvent } from '@/lib/nostr/ndk-events'
 import { getBidAmount } from '@/queries/auctions'
 import {
 	getAuctionStartAt,
@@ -215,8 +215,8 @@ const generateYTicks = (yMin: number, yMax: number, count: number = 12): number[
 // ============================================
 
 interface AuctionTimelineChartProps {
-	bids: NDKEvent[]
-	auction: NDKEvent
+	bids: NostrEventLike[]
+	auction: NostrEventLike
 }
 
 interface VerticalLineMarker {
@@ -394,7 +394,7 @@ export default function AuctionTimelineChart({ bids, auction }: AuctionTimelineC
 						name="Bids"
 						data={displayData}
 						dataKey="y"
-						shape={<CustomBarShape />}
+						shape={(shapeProps: ScatterShapeProps) => <CustomBarShape {...(shapeProps as CustomBarShapeProps)} />}
 						fill="#3b82f6"
 						isAnimationActive={false}
 						animationDuration={800}

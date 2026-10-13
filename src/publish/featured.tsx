@@ -366,7 +366,7 @@ export const removeFromFeaturedAuctions = async (
 	const targetAppPubkey = appPubkey || currentUser.pubkey
 
 	const filter = {
-		kinds: [FEATURED_ITEMS_CONFIG.AUCTIONS.kind],
+		kinds: [FEATURED_ITEMS_CONFIG.AUCTIONS.kind as NDKKind],
 		authors: [targetAppPubkey],
 		'#d': [FEATURED_ITEMS_CONFIG.AUCTIONS.dTag],
 		limit: 1,

@@ -77,6 +77,7 @@ const buildBid = (
 	auctionCoordinate: auction.coordinate,
 	sellerPubkey: auction.sellerPubkey,
 	amount: input.amount,
+	legLockedAmount: input.amount,
 	currency: 'SAT',
 	mint: auction.mints[0]!,
 	locktime: auction.maxEndAt + auction.settlementGrace,

@@ -1221,13 +1221,11 @@ export const nip60Actions = {
 				// never via `stage === 'staging'` (removed in M8).
 				;(window as any).__nip60Wallet = {
 					// Read-only state accessors (no key material)
-					getMints: () => wallet.wallet?.mints ?? [],
+					getMints: () => wallet.mints ?? [],
 					getBalance: () => {
 						const { totalBalance } = getBalancesFromState(wallet)
 						return totalBalance
 					},
-					// Method proxies for test infrastructure (no key exposure)
-					relay: wallet.relay,
 					// Key material for the settlement e2e test (dev/localhost only,
 					// per the gate above). wallet.wallet (full NDKCashuWallet with
 					// seed) and wallet.seed are NOT exposed.

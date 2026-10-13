@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import {
 	ORDER_GENERAL_KIND,
 	ORDER_MESSAGE_TYPE,
@@ -132,7 +133,7 @@ export const decryptSellerPrivateOrderGiftWraps = async (params: {
 	return decryptedCandidates
 }
 
-export const getPublicOrderCorrelationFields = (order: NDKEvent): PublicOrderCorrelationFields | null => {
+export const getPublicOrderCorrelationFields = (order: NostrEventLike): PublicOrderCorrelationFields | null => {
 	if (order.kind !== ORDER_PROCESS_KIND) return null
 
 	const type = getRequiredSingleTagValue(order.tags, 'type')
@@ -170,7 +171,7 @@ export const getPublicOrderCorrelationFields = (order: NDKEvent): PublicOrderCor
 	}
 }
 
-export const privateDetailsMatchPublicOrder = (details: PrivateOrderDeliveryDetails, order: NDKEvent): boolean => {
+export const privateDetailsMatchPublicOrder = (details: PrivateOrderDeliveryDetails, order: NostrEventLike): boolean => {
 	const publicFields = getPublicOrderCorrelationFields(order)
 	if (!publicFields) return false
 
@@ -1106,7 +1107,7 @@ export const getEventDate = (event?: NDKEvent): string => {
 /**
  * Get seller pubkey from order
  */
-export const getSellerPubkey = (order: NDKEvent): string | undefined => {
+export const getSellerPubkey = (order: NostrEventLike): string | undefined => {
 	const recipientTag = order.tags.find((tag) => tag[0] === 'p')
 	return recipientTag?.[1]
 }
@@ -1114,14 +1115,14 @@ export const getSellerPubkey = (order: NDKEvent): string | undefined => {
 /**
  * Get buyer pubkey from order
  */
-export const getBuyerPubkey = (order: NDKEvent): string | undefined => {
+export const getBuyerPubkey = (order: NostrEventLike): string | undefined => {
 	return order.pubkey
 }
 
 /**
  * Get order ID from order
  */
-export const getOrderId = (order: NDKEvent): string | undefined => {
+export const getOrderId = (order: NostrEventLike): string | undefined => {
 	const orderTag = order.tags.find((tag) => tag[0] === 'order')
 	return orderTag?.[1]
 }
@@ -1129,7 +1130,7 @@ export const getOrderId = (order: NDKEvent): string | undefined => {
 /**
  * Get total amount from order
  */
-export const getOrderAmount = (order: NDKEvent): string | undefined => {
+export const getOrderAmount = (order: NostrEventLike): string | undefined => {
 	const amountTag = order.tags.find((tag) => tag[0] === 'amount')
 	return amountTag?.[1]
 }

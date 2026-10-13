@@ -48,8 +48,10 @@ export const usePublishPaymentDetailMutation = () => {
 				queryClient.invalidateQueries({ queryKey: paymentDetailsKeys.byPubkey(userPubkey) })
 			}
 
-			if (params.coordinates) {
-				queryClient.invalidateQueries({ queryKey: paymentDetailsKeys.byProductOrCollection(params.coordinates) })
+			// A multi-product wallet carries several coordinates; invalidate each.
+			const coordinateList = Array.isArray(params.coordinates) ? params.coordinates : params.coordinates ? [params.coordinates] : []
+			for (const coordinate of coordinateList) {
+				queryClient.invalidateQueries({ queryKey: paymentDetailsKeys.byProductOrCollection(coordinate) })
 			}
 
 			toast.success('Payment details published successfully')

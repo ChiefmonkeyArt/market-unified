@@ -137,7 +137,10 @@ describe('resolveFetchedAppSettings', () => {
 	test('returns validated settings from the authoritative event', () => {
 		const event = mockEvent({ content: JSON.stringify(VALID_SETTINGS) })
 
-		expect(resolveFetchedAppSettings([event], APP_PUBKEY, ['plebeian-market-handler'])).toEqual(VALID_SETTINGS)
+		expect(resolveFetchedAppSettings([event], APP_PUBKEY, ['plebeian-market-handler'])).toEqual({
+			...VALID_SETTINGS,
+			contactEmail: undefined,
+		})
 	})
 
 	test('fails closed when returned candidates contain no authoritative event', () => {

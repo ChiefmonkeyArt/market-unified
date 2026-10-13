@@ -153,7 +153,7 @@ describe('NIP-17 order transport publish seam', () => {
 			expect(result.status).toBe('relay_targets_failed')
 			if (result.status !== 'relay_targets_failed') throw new Error('expected relay target failure')
 			expect(result.rumorId).toBe(rumor.id)
-			expect(result.relayTargets.sender.status === 'missing' || result.relayTargets.sender.status === 'empty').toBe(true)
+			expect(result.relayTargets?.sender.status === 'missing' || result.relayTargets?.sender.status === 'empty').toBe(true)
 		}
 
 		expect(calls).toHaveLength(0)
@@ -190,7 +190,7 @@ describe('NIP-17 order transport publish seam', () => {
 			expect(result.status).toBe('relay_targets_failed')
 			if (result.status !== 'relay_targets_failed') throw new Error('expected relay target failure')
 			expect(result.rumorId).toBe(rumor.id)
-			expect(result.relayTargets.recipient.status === 'missing' || result.relayTargets.recipient.status === 'empty').toBe(true)
+			expect(result.relayTargets?.recipient.status === 'missing' || result.relayTargets?.recipient.status === 'empty').toBe(true)
 		}
 
 		expect(calls).toHaveLength(0)

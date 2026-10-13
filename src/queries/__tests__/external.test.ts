@@ -36,7 +36,7 @@ function mockGlobalFetch(responses: Record<string, () => Response | Promise<Resp
 		}
 		return new Response(JSON.stringify({ error: 'not found' }), { status: 404 })
 	}
-	globalThis.fetch = mock(handler)
+	globalThis.fetch = mock(handler) as unknown as typeof fetch
 }
 
 function jsonOk(body: unknown): Response {

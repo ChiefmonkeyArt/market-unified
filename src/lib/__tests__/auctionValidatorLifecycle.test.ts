@@ -114,6 +114,7 @@ const buildBid = (
 		auctionCoordinate: auction.coordinate,
 		sellerPubkey: auction.sellerPubkey,
 		amount: overrides.amount ?? 1_100,
+		legLockedAmount: overrides.amount ?? 1_100,
 		currency: 'SAT',
 		mint: overrides.mint ?? 'https://mint.test',
 		locktime,

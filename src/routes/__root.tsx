@@ -5,7 +5,8 @@ import { SheetRegistry } from '@/components/SheetRegistry'
 import { DialogRegistry } from '@/components/DialogRegistry'
 import { configStore } from '@/lib/stores/config'
 import { useAmIAdmin } from '@/queries/app-settings'
-import { createRootRoute, Outlet, useNavigate, useLocation } from '@tanstack/react-router'
+import { createRootRouteWithContext, Outlet, useNavigate, useLocation } from '@tanstack/react-router'
+import type { AppRouterContext } from '@/lib/router-utils'
 import { useEffect, useState } from 'react'
 import { DecryptPasswordDialog } from '@/components/auth/DecryptPasswordDialog'
 import { SessionUnlockDialog } from '@/components/auth/SessionUnlockDialog'
@@ -25,7 +26,7 @@ import { PIIExposureModal } from '@/components/pii/PIIExposureModal' // Add this
 import { AuctionWonModal } from '@/components/AuctionWonModal'
 import type { PIIScanResult } from '@/lib/utils/piiScanner'
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<AppRouterContext>()({
 	component: RootComponent,
 })
 

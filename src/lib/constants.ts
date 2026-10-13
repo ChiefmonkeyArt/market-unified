@@ -150,6 +150,18 @@ export const PAYMENT_DETAILS_METHOD = {
 
 export type PaymentDetailsMethod = ObjectValues<typeof PAYMENT_DETAILS_METHOD>
 
+/**
+ * Every payment-detail method the app recognises when READING kind-30078
+ * payment details (other clients and the seed script publish on-chain xpubs).
+ * `PAYMENT_DETAILS_METHOD` stays the set the UI OFFERS for publishing.
+ */
+export const RECOGNISED_PAYMENT_DETAILS_METHOD = {
+	...PAYMENT_DETAILS_METHOD,
+	ON_CHAIN: 'on-chain',
+} as const
+
+export type RecognisedPaymentDetailsMethod = ObjectValues<typeof RECOGNISED_PAYMENT_DETAILS_METHOD>
+
 export const COUNTRIES_ISO = {
 	AD: {
 		languages: ['ca'],

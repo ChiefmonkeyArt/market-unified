@@ -70,8 +70,8 @@ describe('theme contrast — WCAG AA for UX-state tokens (≥ 4.5:1)', () => {
 	describe('light mode', () => {
 		for (const [name, { fill, fg }] of Object.entries(LIGHT_MODE_TOKENS)) {
 			test(`${name} foreground on ${name} fill passes WCAG AA`, () => {
-				const fillLum = oklchToLuminance(...fill)
-				const fgLum = oklchToLuminance(...fg)
+				const fillLum = oklchToLuminance(fill[0], fill[1], fill[2])
+				const fgLum = oklchToLuminance(fg[0], fg[1], fg[2])
 				const ratio = contrastRatio(fillLum, fgLum)
 				expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL)
 			})
@@ -81,8 +81,8 @@ describe('theme contrast — WCAG AA for UX-state tokens (≥ 4.5:1)', () => {
 	describe('dark mode', () => {
 		for (const [name, { fill, fg }] of Object.entries(DARK_MODE_TOKENS)) {
 			test(`${name} foreground on ${name} fill passes WCAG AA`, () => {
-				const fillLum = oklchToLuminance(...fill)
-				const fgLum = oklchToLuminance(...fg)
+				const fillLum = oklchToLuminance(fill[0], fill[1], fill[2])
+				const fgLum = oklchToLuminance(fg[0], fg[1], fg[2])
 				const ratio = contrastRatio(fillLum, fgLum)
 				expect(ratio).toBeGreaterThanOrEqual(WCAG_AA_NORMAL)
 			})

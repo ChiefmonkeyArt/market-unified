@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { useEffect, useRef } from 'react'
 import { useStore } from '@tanstack/react-store'
 import { authStore } from '@/lib/stores/auth'
@@ -49,7 +50,7 @@ const chunkValues = (values: string[], size: number): string[][] => {
 	return chunks
 }
 
-const dedupeEvents = (events: NDKEvent[]): NDKEvent[] => {
+const dedupeEvents = (events: NostrEventLike[]): NostrEventLike[] => {
 	const seen = new Set<string>()
 	return events.filter((event) => {
 		if (!event.id || seen.has(event.id)) return false
@@ -58,21 +59,21 @@ const dedupeEvents = (events: NDKEvent[]): NDKEvent[] => {
 	})
 }
 
-const getAuctionCoordinate = (auction: NDKEvent): string => {
+const getAuctionCoordinate = (auction: NostrEventLike): string => {
 	const auctionDTag = getAuctionId(auction)
 	return auctionDTag ? `30408:${auction.pubkey}:${auctionDTag}` : ''
 }
 
-const getEventAuctionRootId = (event: NDKEvent): string => getBidAuctionEventId(event)
+const getEventAuctionRootId = (event: NostrEventLike): string => getBidAuctionEventId(event)
 
-const getEventAuctionCoordinate = (event: NDKEvent): string => getBidAuctionCoordinates(event)
+const getEventAuctionCoordinate = (event: NostrEventLike): string => getBidAuctionCoordinates(event)
 
-const getAddressableEventCoordinate = (event: NDKEvent): string => {
+const getAddressableEventCoordinate = (event: NostrEventLike): string => {
 	const dTag = event.tags.find((tag) => tag[0] === 'd')?.[1]
 	return dTag ? `${event.kind}:${event.pubkey}:${dTag}` : ''
 }
 
-const getTagValues = (event: NDKEvent, tagNames: string[]): string[] =>
+const getTagValues = (event: NostrEventLike, tagNames: string[]): string[] =>
 	event.tags.filter((tag) => tagNames.includes(tag[0]) && Boolean(tag[1])).map((tag) => tag[1])
 
 const resolveScopedKeyFromLookups = (values: string[], lookups: Array<Map<string, string>>): string => {
@@ -85,16 +86,16 @@ const resolveScopedKeyFromLookups = (values: string[], lookups: Array<Map<string
 	return ''
 }
 
-const getAuctionNotificationKey = (auction: NDKEvent): string =>
+const getAuctionNotificationKey = (auction: NostrEventLike): string =>
 	getAuctionRootEventId(auction) || getAuctionCoordinate(auction) || auction.id
 
-const getAuctionBidStatus = (event: NDKEvent): string =>
+const getAuctionBidStatus = (event: NostrEventLike): string =>
 	event.tags
 		.find((tag) => tag[0] === 'status')?.[1]
 		?.trim()
 		.toLowerCase() || 'unknown'
 
-const isCountableAuctionBidEvent = (event: NDKEvent): boolean => {
+const isCountableAuctionBidEvent = (event: NostrEventLike): boolean => {
 	const status = getAuctionBidStatus(event)
 	return !IGNORED_AUCTION_BID_STATUSES.has(status)
 }
@@ -185,7 +186,7 @@ const fetchTaggedAuctionEvents = async ({
 	auctionRootEventIds: string[]
 	auctionCoordinates: string[]
 	since?: number
-}): Promise<NDKEvent[]> => {
+}): Promise<NostrEventLike[]> => {
 	const trustedAuthors = getTrustedAuthorsForKind(kind)
 	const filters = makeTaggedAuctionFilters({
 		kind,
@@ -212,7 +213,7 @@ const fetchTaggedEvents = async ({
 	values: string[]
 	since?: number
 	authors?: string[]
-}): Promise<NDKEvent[]> => {
+}): Promise<NostrEventLike[]> => {
 	const filters = makeTaggedValueFilters({
 		kind,
 		tagName,
@@ -234,7 +235,7 @@ const fetchAddressableCommentEvents = async ({
 	targetEventIds: string[]
 	targetCoordinates: string[]
 	since?: number
-}): Promise<NDKEvent[]> => {
+}): Promise<NostrEventLike[]> => {
 	const [byCoordinates, byUpperCoordinates, byUpperEventIds] = await Promise.all([
 		fetchTaggedEvents({
 			kind: COMMENT_KIND_NDK,
@@ -302,42 +303,42 @@ export const useNotificationMonitor = () => {
 		console.log('[NotificationMonitor] Starting notification monitoring for user:', user.pubkey)
 
 		// Helper to check if an event is newer than last seen
-		const isNewOrder = (event: NDKEvent): boolean => {
+		const isNewOrder = (event: NostrEventLike): boolean => {
 			const lastSeen = notificationActions.getLastSeenOrders()
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewMessage = (event: NDKEvent, pubkey: string): boolean => {
+		const isNewMessage = (event: NostrEventLike, pubkey: string): boolean => {
 			const lastSeen = notificationActions.getLastSeenForConversation(pubkey)
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewPurchaseUpdate = (event: NDKEvent): boolean => {
+		const isNewPurchaseUpdate = (event: NostrEventLike): boolean => {
 			const lastSeen = notificationActions.getLastSeenPurchases()
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewAuctionBid = (event: NDKEvent, auctionKey?: string): boolean => {
+		const isNewAuctionBid = (event: NostrEventLike, auctionKey?: string): boolean => {
 			const lastSeen = notificationActions.getLastSeenAuctionBids(auctionKey)
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewBidUpdate = (event: NDKEvent): boolean => {
+		const isNewBidUpdate = (event: NostrEventLike): boolean => {
 			const lastSeen = notificationActions.getLastSeenBidUpdates()
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewAuctionComment = (event: NDKEvent, auctionKey?: string): boolean => {
+		const isNewAuctionComment = (event: NostrEventLike, auctionKey?: string): boolean => {
 			const lastSeen = notificationActions.getLastSeenAuctionComments(auctionKey)
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewAuctionEventComment = (event: NDKEvent, auctionKey?: string): boolean => {
+		const isNewAuctionEventComment = (event: NostrEventLike, auctionKey?: string): boolean => {
 			const lastSeen = notificationActions.getLastSeenAuctionEventComments(auctionKey)
 			return (event.created_at || 0) > lastSeen
 		}
 
-		const isNewProductComment = (event: NDKEvent, productKey?: string): boolean => {
+		const isNewProductComment = (event: NostrEventLike, productKey?: string): boolean => {
 			const lastSeen = notificationActions.getLastSeenProductComments(productKey)
 			return (event.created_at || 0) > lastSeen
 		}
@@ -351,7 +352,7 @@ export const useNotificationMonitor = () => {
 			kind: NDKKind
 			tagName: '#e' | '#a' | '#A' | '#E'
 			values: string[]
-			onEvent: (event: NDKEvent) => void
+			onEvent: (event: NostrEventLike) => void
 		}) => {
 			if (isCancelled || values.length === 0) return
 
@@ -374,7 +375,7 @@ export const useNotificationMonitor = () => {
 			}
 		}
 
-		const scheduleAuctionPhaseNotification = (auction: NDKEvent) => {
+		const scheduleAuctionPhaseNotification = (auction: NostrEventLike) => {
 			const auctionKey = getAuctionNotificationKey(auction)
 			if (!auctionKey) return
 
@@ -410,7 +411,7 @@ export const useNotificationMonitor = () => {
 		}
 
 		const getHighestOwnBidAmountForAuction = (
-			event: NDKEvent,
+			event: NostrEventLike,
 			highestOwnBidByRootId: Map<string, number>,
 			highestOwnBidByCoordinate: Map<string, number>,
 		): number => {
@@ -761,7 +762,7 @@ export const useNotificationMonitor = () => {
 
 				sellerAuctions.forEach(scheduleAuctionPhaseNotification)
 
-				const handleSellerBidEvent = (event: NDKEvent) => {
+				const handleSellerBidEvent = (event: NostrEventLike) => {
 					if (!event.id || seenAuctionEventIds.has(event.id)) return
 					seenAuctionEventIds.add(event.id)
 
@@ -776,7 +777,7 @@ export const useNotificationMonitor = () => {
 					notificationActions.incrementUnseenAuctionBids(auctionKey)
 				}
 
-				const handleWatchedBidEvent = (event: NDKEvent) => {
+				const handleWatchedBidEvent = (event: NostrEventLike) => {
 					if (!event.id || seenBidEventIds.has(event.id)) return
 					seenBidEventIds.add(event.id)
 					if (event.pubkey === user.pubkey || !isCountableAuctionBidEvent(event) || !isNewBidUpdate(event)) return
@@ -788,7 +789,7 @@ export const useNotificationMonitor = () => {
 					notificationActions.incrementUnseenBidUpdates()
 				}
 
-				const handleSellerLiveChatEvent = (event: NDKEvent) => {
+				const handleSellerLiveChatEvent = (event: NostrEventLike) => {
 					if (!event.id || seenAuctionCommentEventIds.has(event.id)) return
 					seenAuctionCommentEventIds.add(event.id)
 
@@ -811,7 +812,7 @@ export const useNotificationMonitor = () => {
 					})
 				}
 
-				const handleSellerLiveActivityEvent = (event: NDKEvent) => {
+				const handleSellerLiveActivityEvent = (event: NostrEventLike) => {
 					const liveActivityCoordinate = getAddressableEventCoordinate(event)
 					if (!liveActivityCoordinate) return
 
@@ -873,7 +874,7 @@ export const useNotificationMonitor = () => {
 					})
 				}
 
-				const handleSellerAuctionCommentEvent = (event: NDKEvent) => {
+				const handleSellerAuctionCommentEvent = (event: NostrEventLike) => {
 					if (!event.id || seenAuctionThreadCommentEventIds.has(event.id)) return
 					seenAuctionThreadCommentEventIds.add(event.id)
 
@@ -887,7 +888,7 @@ export const useNotificationMonitor = () => {
 					notificationActions.incrementUnseenAuctionEventComments(auctionKey)
 				}
 
-				const handleSellerProductCommentEvent = (event: NDKEvent) => {
+				const handleSellerProductCommentEvent = (event: NostrEventLike) => {
 					if (!event.id || seenProductCommentEventIds.has(event.id)) return
 					seenProductCommentEventIds.add(event.id)
 
@@ -917,7 +918,7 @@ export const useNotificationMonitor = () => {
 					subscribedCoordinates: subscribedSellerProductCoordinates,
 				}
 
-				const handleOwnProductEvent = (event: NDKEvent, refreshComments = false) => {
+				const handleOwnProductEvent = (event: NostrEventLike, refreshComments = false) => {
 					const productKey = registerSellerProductNotificationScope(
 						event,
 						user.pubkey,
@@ -944,7 +945,7 @@ export const useNotificationMonitor = () => {
 						})
 				}
 
-				const handleWatchedSettlementEvent = (event: NDKEvent) => {
+				const handleWatchedSettlementEvent = (event: NostrEventLike) => {
 					if (!event.id || seenSettlementEventIds.has(event.id)) return
 					seenSettlementEventIds.add(event.id)
 					if (event.pubkey === user.pubkey || !isNewBidUpdate(event)) return
@@ -953,7 +954,7 @@ export const useNotificationMonitor = () => {
 					notificationActions.incrementUnseenBidUpdates()
 				}
 
-				const handleOwnAuctionEvent = (event: NDKEvent) => {
+				const handleOwnAuctionEvent = (event: NostrEventLike) => {
 					if (event.pubkey !== user.pubkey) return
 
 					const auctionKey = getAuctionNotificationKey(event)
@@ -1085,7 +1086,7 @@ export const useNotificationMonitor = () => {
 			},
 		)
 
-		orderSubscription.on('event', (event: NDKEvent) => {
+		orderSubscription.on('event', (event: NostrEventLike) => {
 			// Check if it's an order creation event
 			const typeTag = event.tags.find((tag) => tag[0] === 'type')
 			if (typeTag?.[1] === ORDER_MESSAGE_TYPE.ORDER_CREATION) {
@@ -1111,7 +1112,7 @@ export const useNotificationMonitor = () => {
 			},
 		)
 
-		messageSubscription.on('event', (event: NDKEvent) => {
+		messageSubscription.on('event', (event: NostrEventLike) => {
 			const senderPubkey = event.pubkey
 			// Don't count messages we sent
 			if (senderPubkey !== user.pubkey && isNewMessage(event, senderPubkey)) {
@@ -1135,7 +1136,7 @@ export const useNotificationMonitor = () => {
 			},
 		)
 
-		purchaseUpdateSubscription.on('event', (event: NDKEvent) => {
+		purchaseUpdateSubscription.on('event', (event: NostrEventLike) => {
 			// Only count if event is from someone else (the seller)
 			if (event.pubkey === user.pubkey) return
 

@@ -4,7 +4,7 @@ const DB_NAME = 'plebeian_market_db'
 const DB_VERSION = 1
 const STORE_NAME = 'product_form_drafts'
 
-type ProductFormDraft = Omit<ProductFormState, 'mainTab' | 'productSubTab'> & {
+type ProductFormDraft = ProductFormState & {
 	savedAt: number
 }
 
@@ -49,8 +49,9 @@ export const saveProductFormDraft = async (productId: string, formState: Product
 	try {
 		const db = await openDB()
 
-		// Exclude tab state from persistence - we only want to save actual form data
-		const { mainTab: _mainTab, productSubTab: _productSubTab, ...dataToSave } = formState
+		// The draft includes `activeTab` so a restored draft reopens on the saved tab
+		// (the old `mainTab`/`productSubTab` exclusion named fields that no longer exist).
+		const dataToSave = formState
 
 		const draft: ProductFormDraft = {
 			...dataToSave,

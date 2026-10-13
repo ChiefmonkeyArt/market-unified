@@ -201,7 +201,9 @@ export function Nip60Wallet() {
 			if (pendingToken.source === 'cashu') {
 				success = await cashuActions.reclaimToken(pendingToken.id)
 			} else {
-				success = await nip60Actions.reclaimToken(pendingToken.id)
+				// The NIP-60 reclaim resolves on success and throws on failure.
+				await nip60Actions.reclaimToken(pendingToken.id)
+				success = true
 			}
 			if (success) {
 				toast.success('Token reclaimed! Funds returned to wallet.')
@@ -378,12 +380,13 @@ export function Nip60Wallet() {
 							className="h-8 text-sm bg-white/10 border-white/20 text-white placeholder:text-gray-500"
 						/>
 						<Button
-							variant="dark-active"
+							variant="ghost"
+							className="bg-white/20 text-white border-0 hover:bg-white/30 hover:text-white"
 							size="sm"
 							onClick={() => void handleDevMintTestEcash()}
 							disabled={isDevMinting}
-							icon={isDevMinting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Coins className="h-3.5 w-3.5" />}
 						>
+							{isDevMinting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Coins className="h-3.5 w-3.5" />}
 							Mint Test
 						</Button>
 					</div>
@@ -399,12 +402,13 @@ export function Nip60Wallet() {
 							className="h-8 text-sm bg-white/10 border-white/20 text-white placeholder:text-gray-500"
 						/>
 						<Button
-							variant="dark-active"
+							variant="ghost"
+							className="bg-white/20 text-white border-0 hover:bg-white/30 hover:text-white"
 							size="sm"
 							onClick={() => void handleDevBidSeededAuction()}
 							disabled={isDevBidding}
-							icon={isDevBidding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gavel className="h-3.5 w-3.5" />}
 						>
+							{isDevBidding ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Gavel className="h-3.5 w-3.5" />}
 							Bid Seeded
 						</Button>
 					</div>

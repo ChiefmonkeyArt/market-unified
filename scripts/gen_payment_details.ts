@@ -1,5 +1,5 @@
-import type { PaymentDetailsMethod } from '@/lib/constants'
-import { PAYMENT_DETAILS_METHOD } from '@/lib/constants'
+import type { PaymentDetailsMethod, RecognisedPaymentDetailsMethod } from '@/lib/constants'
+import { PAYMENT_DETAILS_METHOD, RECOGNISED_PAYMENT_DETAILS_METHOD } from '@/lib/constants'
 import { faker } from '@faker-js/faker'
 import NDK, { NDKEvent, NDKKind, type NDKPrivateKeySigner, type NDKTag } from '@nostr-dev-kit/ndk'
 import { nip04, nip19 } from 'nostr-tools'
@@ -28,7 +28,7 @@ function ensureHexPubkey(pubkey: string | undefined): string {
 
 export interface PaymentDetailData {
 	id: string
-	paymentMethod: PaymentDetailsMethod
+	paymentMethod: RecognisedPaymentDetailsMethod
 	paymentDetail: string
 	stallId: string | null
 	stallName: string
@@ -89,7 +89,7 @@ export function generateOnChainPaymentDetail(options: {
 	const { xpub, scope = 'global', coordinates = [], scopeName = 'General' } = options
 
 	return {
-		paymentMethod: PAYMENT_DETAILS_METHOD.ON_CHAIN,
+		paymentMethod: RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN,
 		paymentDetail: xpub,
 		stallId: null,
 		stallName: scopeName,
@@ -97,7 +97,7 @@ export function generateOnChainPaymentDetail(options: {
 		coordinates,
 		tags: [
 			['d', faker.string.alphanumeric(16)], // Unique identifier
-			['method', PAYMENT_DETAILS_METHOD.ON_CHAIN],
+			['method', RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN],
 			['details', xpub],
 			['stall_id', ''],
 			['stall_name', scopeName],

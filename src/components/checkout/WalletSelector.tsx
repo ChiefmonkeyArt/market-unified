@@ -1,4 +1,4 @@
-import { PAYMENT_DETAILS_METHOD } from '@/lib/constants'
+import { PAYMENT_DETAILS_METHOD, RECOGNISED_PAYMENT_DETAILS_METHOD } from '@/lib/constants'
 import type { PaymentDetail } from '@/queries/payment'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -19,7 +19,7 @@ const getPaymentMethodLabel = (method: string) => {
 	switch (method) {
 		case PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK:
 			return '⚡ Lightning'
-		case PAYMENT_DETAILS_METHOD.ON_CHAIN:
+		case RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN:
 			return '₿ On-chain'
 		default:
 			return 'Other'

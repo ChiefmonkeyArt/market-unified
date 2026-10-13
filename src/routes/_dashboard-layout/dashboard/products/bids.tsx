@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { AuctionCountdown } from '@/components/AuctionCountdown'
 import { AvatarUser } from '@/components/AvatarUser'
 import { ProfileName } from '@/components/ProfileName'
@@ -26,7 +27,6 @@ import {
 } from '@/queries/auctions'
 import { useDashboardTitle } from '@/routes/_dashboard-layout'
 import { useAutoAnimate } from '@formkit/auto-animate/react'
-import type { NDKEvent } from '@/lib/nostr/ndk-events'
 import { useQueries } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { useStore } from '@tanstack/react-store'
@@ -39,8 +39,8 @@ type BidGroup = {
 	auctionEventId: string
 	auctionCoordinates?: string
 	sellerPubkey: string
-	latestBid: NDKEvent
-	bids: NDKEvent[]
+	latestBid: NostrEventLike
+	bids: NostrEventLike[]
 	pendingTokens: PendingNip60Token[]
 }
 
@@ -69,7 +69,7 @@ const getBidGroupReclaimReadyAt = (tokens: PendingNip60Token[]): number =>
 		return readyAt > max ? readyAt : max
 	}, 0)
 
-const getLatestBidForGroup = (bids: NDKEvent[]): NDKEvent =>
+const getLatestBidForGroup = (bids: NostrEventLike[]): NostrEventLike =>
 	[...bids].sort((a, b) => {
 		const amountDelta = getBidAmount(b) - getBidAmount(a)
 		if (amountDelta !== 0) return amountDelta
@@ -80,7 +80,7 @@ const getLatestBidForGroup = (bids: NDKEvent[]): NDKEvent =>
 
 const getBidGroupState = (
 	group: BidGroup,
-	settlementEvent: NDKEvent | null,
+	settlementEvent: NostrEventLike | null,
 	userPubkey: string,
 	now: number,
 ): {
@@ -282,7 +282,7 @@ function BidsOverviewComponent() {
 
 		for (const group of Array.from(groups.values())) {
 			group.latestBid = getLatestBidForGroup(group.bids)
-			const groupBidIds = new Set(group.bids.map((bid: NDKEvent) => bid.id))
+			const groupBidIds = new Set(group.bids.map((bid: NostrEventLike) => bid.id))
 			group.pendingTokens = auctionBidTokens
 				.filter((token) => {
 					const context = token.context

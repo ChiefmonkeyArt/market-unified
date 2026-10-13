@@ -159,6 +159,7 @@ const buildBid = (auction: ParsedAuctionEvent, overrides: BidOverrides = {}): Pa
 		auctionCoordinate: overrides.auctionCoordinate ?? auction.coordinate,
 		sellerPubkey: overrides.sellerPubkey ?? auction.sellerPubkey,
 		amount: overrides.amount ?? 1_100,
+		legLockedAmount: overrides.amount ?? 1_100,
 		currency: 'SAT',
 		mint: overrides.mint ?? 'https://mint.test',
 		locktime,
@@ -743,7 +744,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 	test('no DLEQ exemption: a bid with no dleq_proof is dleq_invalid regardless of start_at', () => {
 		const auction = buildAuction()
 		const bid = buildBid(auction, { dleqProofs: [] })
-		const verdict = validateBid({ auction, bid, observedAt: bid.createdAt, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: bid.createdAt })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -753,7 +754,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 	test('dleq_invalid when a bid carries no dleq_proof tags', () => {
 		const auction = buildPostRolloutAuction()
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -768,7 +769,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 			lockSecrets: [lockSecretWithNonce(locktime, 'n1'), lockSecretWithNonce(locktime, 'n2')],
 			dleqProofs: [makeDleqProof()],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -778,7 +779,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 	test('valid_bid_placed when a post-rollout bid carries a matching dleq_proof', () => {
 		const auction = buildPostRolloutAuction()
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [makeDleqProof()] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict).toEqual({ claim: 'valid_bid_placed' })
 	})
 
@@ -791,7 +792,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 			lockSecrets: [lockSecretWithNonce(locktime, 'n1'), lockSecretWithNonce(locktime, 'n2')],
 			dleqProofs: [sharedC, sharedC],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -803,7 +804,7 @@ describe('validateBid — DLEQ collateral checks (ADR-0011)', () => {
 		// amount=1 is below the floor → would be `below_starting_bid`, but the
 		// missing DLEQ collateral is checked earlier (Step 3.5 < Step 5).
 		const bid = buildBid(auction, { createdAt: POST + 500, amount: 1, dleqProofs: [] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -839,7 +840,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), id: '' } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -851,7 +852,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), amount: 0 } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -863,7 +864,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), amount: -1 } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -875,7 +876,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), amount: 100.5 } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -887,7 +888,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), C: '' } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -899,7 +900,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), C: '02' + 'f'.repeat(63) } as DleqProof // 65 chars
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -911,7 +912,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), e: '' } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -923,7 +924,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), s: '' } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -935,7 +936,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), r: '' } as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -949,7 +950,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 			createdAt: POST + 500,
 			dleqProofs: [makeDleqProof()],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict).toEqual({ claim: 'valid_bid_placed' })
 	})
 
@@ -957,7 +958,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), C: undefined } as unknown as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -968,7 +969,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 		const auction = buildPostRolloutAuction()
 		const badProof = { ...makeDleqProof(), r: undefined } as unknown as DleqProof
 		const bid = buildBid(auction, { createdAt: POST + 500, dleqProofs: [badProof] })
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -1002,7 +1003,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 			],
 			dleqProofs: [makeDleqProof({ C: COMPRESSED_PK }), makeDleqProof({ C: '', e: '', s: '', r: '' })],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -1016,7 +1017,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 			createdAt: POST + 500,
 			dleqProofs: [null as unknown as DleqProof],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')
@@ -1030,7 +1031,7 @@ describe('validateBid — DLEQ proof structural fields (ADR-0011 B4)', () => {
 			createdAt: POST + 500,
 			dleqProofs: [undefined as unknown as DleqProof],
 		})
-		const verdict = validateBid({ auction, bid, observedAt: POST + 500, nut7State: 'unspent' })
+		const verdict = validateBid({ auction, bid, observedAt: POST + 500 })
 		expect(verdict.claim).toBe('bid_invalid')
 		if (verdict.claim === 'bid_invalid') {
 			expect(verdict.reason).toBe('dleq_invalid')

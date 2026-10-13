@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { useRef, useEffect, useState, useCallback } from 'react'
 import { Send, MessageCircle, ChevronDown } from 'lucide-react'
 import { useLiveChatMessages, useLiveActivity } from '@/queries/liveChat'
@@ -6,14 +7,13 @@ import { deriveLiveActivityStatus, type LiveActivityStatus } from '@/lib/nip53'
 import { getAuctionId } from '@/queries/auctions'
 import { getAuctionStartAt, getAuctionBiddingCutoffAt } from '@/lib/auctionSettlement'
 import { LiveChatMessageBubble } from './LiveChatMessage'
-import { NDKEvent } from '@nostr-dev-kit/ndk'
 import { useStore } from '@tanstack/react-store'
 import { authStore } from '@/lib/stores/auth'
 import { Button } from './ui/button'
 import { cn } from '@/lib/utils'
 
 interface LiveChatPanelProps {
-	auctionEvent: NDKEvent
+	auctionEvent: NostrEventLike
 }
 
 function getInputPlaceholder(status: LiveActivityStatus): string {

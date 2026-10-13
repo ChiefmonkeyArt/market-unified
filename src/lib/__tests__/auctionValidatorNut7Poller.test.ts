@@ -127,6 +127,7 @@ const buildBid = (auction: ParsedAuctionEvent, overrides: { id?: string; proofY?
 		auctionCoordinate: auction.coordinate,
 		sellerPubkey: auction.sellerPubkey,
 		amount: 1_200,
+		legLockedAmount: 1_200,
 		currency: 'SAT',
 		mint: auction.mints[0]!,
 		locktime: auction.maxEndAt + auction.settlementGrace,

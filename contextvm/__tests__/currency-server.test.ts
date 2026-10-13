@@ -25,9 +25,7 @@ describe('currency-server integration', () => {
 	let fetchSpy: ReturnType<typeof spyOn>
 
 	beforeEach(() => {
-		fetchSpy = spyOn(globalThis, 'fetch').mockImplementation(() => {
-			return new Response('blocked', { status: 403 })
-		})
+		fetchSpy = spyOn(globalThis, 'fetch').mockImplementation((async () => new Response('blocked', { status: 403 })) as unknown as typeof fetch)
 	})
 
 	afterEach(() => {

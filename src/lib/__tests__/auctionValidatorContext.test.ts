@@ -136,6 +136,7 @@ const buildBid = (overrides: { id?: string; mint?: string } = {}): ParsedBidEven
 	auctionCoordinate: `30408:${SELLER_PK}:auction-test`,
 	sellerPubkey: SELLER_PK,
 	amount: 1_200,
+	legLockedAmount: 1_200,
 	currency: 'SAT',
 	mint: overrides.mint ?? 'https://mint.test',
 	locktime: 5_700,

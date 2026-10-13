@@ -3,12 +3,17 @@ import { address as baddress, networks, payments } from 'bitcoinjs-lib'
 import * as bs58check from 'bs58check'
 
 import { isValidNip05 } from '../utils'
-import { PAYMENT_DETAILS_METHOD, type PaymentDetailsMethod } from '../constants'
+import {
+	PAYMENT_DETAILS_METHOD,
+	RECOGNISED_PAYMENT_DETAILS_METHOD,
+	type PaymentDetailsMethod,
+	type RecognisedPaymentDetailsMethod,
+} from '../constants'
 
 export type PaymentDetailsResult = {
 	success: boolean
 	paymentDetails?: string
-	method?: (typeof PAYMENT_DETAILS_METHOD)[keyof typeof PAYMENT_DETAILS_METHOD]
+	method?: RecognisedPaymentDetailsMethod
 	error?: string
 }
 
@@ -144,7 +149,7 @@ export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetails
 			return {
 				success: true,
 				paymentDetails: text,
-				method: PAYMENT_DETAILS_METHOD.ON_CHAIN,
+				method: RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN,
 			}
 		}
 
@@ -161,12 +166,12 @@ export async function parsePaymentDetailsFromClipboard(): Promise<PaymentDetails
 	}
 }
 
-export const paymentMethodLabels: Record<PaymentDetailsMethod, string> = {
+export const paymentMethodLabels: Record<RecognisedPaymentDetailsMethod, string> = {
 	[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'Lightning Address',
-	[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'Onchain Address',
+	[RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'Onchain Address',
 }
 
-export const paymentMethodIcons: Record<PaymentDetailsMethod, string> = {
+export const paymentMethodIcons: Record<RecognisedPaymentDetailsMethod, string> = {
 	[PAYMENT_DETAILS_METHOD.LIGHTNING_NETWORK]: 'i-mingcute-lightning-line',
-	[PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'i-mingcute-anchor-line',
+	[RECOGNISED_PAYMENT_DETAILS_METHOD.ON_CHAIN]: 'i-mingcute-anchor-line',
 }

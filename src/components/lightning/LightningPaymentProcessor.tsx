@@ -10,7 +10,7 @@ import type { PaymentProof } from '@sdk/commerce/payments/proof'
 import { paymentProofToReceiptPreimage } from '@sdk/commerce/payments/proof'
 import { handleNWCPayment, handleWebLNPayment, hasWebLN, validatePreimage } from '@/lib/utils/payment.utils'
 import { copyToClipboard } from '@/lib/utils'
-import { NDKEvent, NDKUser, NDKZapper } from '@nostr-dev-kit/ndk'
+import { NDKEvent, NDKUser, NDKZapper, type NDKPaymentConfirmationLN } from '@nostr-dev-kit/ndk'
 import { useStore } from '@tanstack/react-store'
 import { ChevronLeft, ChevronRight, Copy, CreditCard, Loader2, Zap } from 'lucide-react'
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from 'react'
@@ -186,9 +186,11 @@ export const LightningPaymentProcessor = forwardRef<LightningPaymentProcessorRef
 							invoicePreview: payment.pr.substring(0, 30) + '...',
 						})
 						setInvoice(payment.pr)
-						// Return a placeholder confirmation so zapper doesn't treat this as a failure;
-						// actual payment happens via the processor UI.
-						return { pr: payment.pr }
+						// Return a placeholder confirmation so zapper doesn't treat this as a failure
+						// (NDKZapper.zap() throws when every split resolves undefined); actual payment
+						// happens via the processor UI. It carries no preimage, so NDK emits no
+						// `ln_payment` for it.
+						return { pr: payment.pr } as unknown as NDKPaymentConfirmationLN
 					},
 				})
 
@@ -199,6 +201,7 @@ export const LightningPaymentProcessor = forwardRef<LightningPaymentProcessorRef
 				console.error('❌ Failed to generate zap invoice:', error)
 				onPaymentFailed?.({
 					success: false,
+					invoiceId: data.invoiceId,
 					error: error instanceof Error ? error.message : 'Failed to generate invoice',
 				})
 				hasRequestedInvoiceRef.current = false

@@ -1652,7 +1652,7 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 		// winning bid must not be able to displace it with reserve_not_met.
 		const [rnmBids, rnmVerdicts] = await Promise.all([
 			fetchAuctionBids(formData.auctionEventId, null, auctionCoordinate, true),
-			fetchAuctionVerdicts(formData.auctionEventId, null, auctionCoordinate, undefined, undefined, true),
+			fetchAuctionVerdicts(formData.auctionEventId, null, auctionCoordinate),
 		])
 		const rnmParsedBids = rnmBids
 			.map((b) => parseBidEvent(toRawEvent(b)))
@@ -1736,7 +1736,7 @@ export const publishAuctionSettlement = async (formData: AuctionSettlementFormDa
 	// winner independently from validator quorum evidence.
 	const [bids, verdictEvents] = await Promise.all([
 		fetchAuctionBids(formData.auctionEventId, null, auctionCoordinate, true),
-		fetchAuctionVerdicts(formData.auctionEventId, null, auctionCoordinate, undefined, undefined, true),
+		fetchAuctionVerdicts(formData.auctionEventId, null, auctionCoordinate),
 	])
 	if (!bids.length) {
 		throw new Error('No bids on this auction — nothing to settle. Use reserve_not_met to close it.')

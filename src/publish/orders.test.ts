@@ -1,4 +1,4 @@
-import type { SignerCapability } from '@sdk/core'
+import type { NostrEventLike, SignerCapability } from '@sdk/core'
 import { beforeEach, describe, expect, mock, test } from 'bun:test'
 import { finalizeEvent, getEventHash, getPublicKey, nip44 } from 'nostr-tools'
 import type { Event, UnsignedEvent } from 'nostr-tools'
@@ -557,7 +557,7 @@ describe('public order privacy guard', () => {
 		expect(decrypted.details.delivery.address?.firstLineOfAddress).toBe('123 Main Street')
 		expect(decrypted.details.delivery.address?.additionalInformation).toBe('Apt Secret Notes')
 		expect(decrypted.details.items).toEqual([{ productRef: publicProductRef(seller.pubkey, 'physical-product'), quantity: 2 }])
-		expect(privateDetailsMatchPublicOrder(decrypted.details, order)).toBe(true)
+		expect(privateDetailsMatchPublicOrder(decrypted.details, order as NostrEventLike)).toBe(true)
 	})
 
 	test('digital delivery publishes encrypted contact details before sanitized public order marker', async () => {
@@ -586,7 +586,7 @@ describe('public order privacy guard', () => {
 		expect(decrypted.details.delivery.name).toBeUndefined()
 		expect(decrypted.details.delivery.phone).toBeUndefined()
 		expect(decrypted.details.delivery.address).toBeUndefined()
-		expect(privateDetailsMatchPublicOrder(decrypted.details, order)).toBe(true)
+		expect(privateDetailsMatchPublicOrder(decrypted.details, order as NostrEventLike)).toBe(true)
 	})
 
 	test('missing signer fails closed before any publish for required private delivery', async () => {

@@ -38,10 +38,14 @@ async function getCurrencyClient(): Promise<PlebianCurrencyClient> {
 			const cvmRelays = getCurrencyServerRelays(stage)
 			const relays = mainRelay ? [mainRelay, ...cvmRelays] : cvmRelays
 
+			// Fail closed: never talk to an unidentified currency server.
+			const serverPubkey = configStore.state.config.cvmServerPubkey
+			if (!serverPubkey) throw new Error('cvmServerPubkey is not configured')
+
 			const client = new PlebianCurrencyClient({
 				privateKey,
 				relays,
-				serverPubkey: configStore.state.config.cvmServerPubkey,
+				serverPubkey,
 			})
 
 			currencyClient = client

@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { ndkActions } from '@/lib/stores/ndk'
 import type { NDKFilter, NDKEvent } from '@nostr-dev-kit/ndk'
 import { verifyNostrEventSignature } from '@/lib/nostr/event-signature'
@@ -20,7 +21,7 @@ const LIVE_CHAT_KIND_NDK = LIVE_CHAT_KIND as unknown as NDKKind
 import { getAuctionId } from './auctions'
 import { configStore } from '@/lib/stores/config'
 
-export const fetchLiveActivity = async (event: NDKEvent): Promise<LiveActivity | null> => {
+export const fetchLiveActivity = async (event: NostrEventLike): Promise<LiveActivity | null> => {
 	const dTag = getAuctionId(event)
 	if (!dTag) return null
 
@@ -130,7 +131,7 @@ export interface UseLiveActivityOptions {
 	refetchInterval?: number
 }
 
-export const useLiveActivity = (event: NDKEvent | null, options?: UseLiveActivityOptions) => {
+export const useLiveActivity = (event: NostrEventLike | null, options?: UseLiveActivityOptions) => {
 	const dTag = event ? getAuctionId(event) : ''
 	const coord = event && dTag ? `${AUCTION_KIND}:${event.pubkey}:${dTag}` : ''
 

@@ -30,7 +30,7 @@ function makeMockNdk(relayUrls: string[] = []) {
 		}),
 	)
 	return {
-		subscribe: mock(() => ({ stop: mock(() => {}) })),
+		subscribe: mock((..._args: unknown[]) => ({ stop: mock(() => {}) })),
 		pool: {
 			relays,
 			useTemporaryRelay: mock((relay: { url: string }) => {
@@ -53,8 +53,8 @@ const mockNdkStore = {
 	},
 }
 const mockNdkActions = {
-	fetchEventsWithTimeout: mock(async () => new Set([stubNdkEvent])),
-	publishEvent: mock(async () => new Set([{ url: 'wss://relay.example' }])),
+	fetchEventsWithTimeout: mock(async (..._args: unknown[]) => new Set([stubNdkEvent])),
+	publishEvent: mock(async (..._args: unknown[]): Promise<Set<{ url: string }>> => new Set([{ url: 'wss://relay.example' }])),
 	getSigner: () => undefined,
 	getUser: mock(async () => null as { pubkey: string } | null),
 }
@@ -205,7 +205,7 @@ describe('ndk bridge adapter (io-ndk)', () => {
 	test('subscribe relays converted raw events and closeOnEose defaults to false', () => {
 		const stopFn = mock(() => {})
 		const ndk = makeMockNdk()
-		ndk.subscribe.mockImplementation((filter, opts) => {
+		ndk.subscribe.mockImplementation((_filter: unknown, opts: unknown) => {
 			// Default closeOnEose must be false per the SubscribeOptions contract.
 			expect((opts as { closeOnEose: boolean }).closeOnEose).toBe(false)
 			;(opts as { onEvent: (e: unknown) => void }).onEvent(stubNdkEvent)

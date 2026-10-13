@@ -1,3 +1,4 @@
+import type { NostrEventLike } from '@sdk/core/nostr/eventLike'
 import { getEventAddress } from '@sdk/core/nostr/eventLike'
 import { ndkActions } from '@/lib/stores/ndk'
 import { NDKEvent, type NDKFilter } from '@nostr-dev-kit/ndk'
@@ -30,7 +31,7 @@ export interface CommentThread extends Comment {
 	children: CommentThread[]
 }
 
-const transformCommentEvent = (event: NDKEvent, eventTarget: NDKEvent): Comment => {
+const transformCommentEvent = (event: NDKEvent, eventTarget: NostrEventLike): Comment => {
 	const parentKind = event.tags.find((t) => t[0] === 'k')?.at(1)
 	const parentId = parentKind === COMMENT_KIND.toString() ? event.tags.find((t) => t[0] === 'e')?.at(1) : undefined
 	const coordinates = isAddressableKind(eventTarget.kind) ? getEventAddress(eventTarget) : undefined
@@ -49,7 +50,7 @@ const transformCommentEvent = (event: NDKEvent, eventTarget: NDKEvent): Comment 
 	}
 }
 
-const commentTargetsEvent = (commentEvent: NDKEvent, eventTarget: NDKEvent): boolean => {
+const commentTargetsEvent = (commentEvent: NDKEvent, eventTarget: NostrEventLike): boolean => {
 	const targetAddress = isAddressableKind(eventTarget.kind) ? getEventAddress(eventTarget) : undefined
 
 	return commentEvent.tags.some((tag) => {
@@ -59,7 +60,7 @@ const commentTargetsEvent = (commentEvent: NDKEvent, eventTarget: NDKEvent): boo
 	})
 }
 
-const transformCommentEventAsThread = (event: NDKEvent, eventTarget: NDKEvent, parent?: Comment) => {
+const transformCommentEventAsThread = (event: NDKEvent, eventTarget: NostrEventLike, parent?: Comment) => {
 	return { ...transformCommentEvent(event, eventTarget), parent, children: [] }
 }
 
@@ -86,7 +87,7 @@ const sortCommentThreadByDate = (thread: CommentThread, depth = 0, visited = new
  * Fetches NIP-22 comments for a product
  * @param productCoordinates - The product coordinates in format "30018:<pubkey>:<d-tag>"
  */
-export const fetchProductComments = async (event: NDKEvent): Promise<Comment[]> => {
+export const fetchProductComments = async (event: NostrEventLike): Promise<Comment[]> => {
 	const filters: NDKFilter[] = []
 	const filtersReplies: NDKFilter[] = []
 
@@ -180,7 +181,7 @@ export const transformCommentsMapIntoThreads = (comments: Comment[]): CommentThr
 /**
  * Hook to fetch comments for a product
  */
-export const useComments = (event: NDKEvent) => {
+export const useComments = (event: NostrEventLike) => {
 	const targetCoordinates = isAddressableKind(event.kind) ? getEventAddress(event) : event.id
 
 	return useQuery(

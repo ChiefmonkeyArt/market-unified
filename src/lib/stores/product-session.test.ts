@@ -13,7 +13,7 @@ const DIRTY_CREATE_STATE: ProductFormState = {
 	quantity: '2',
 	mainCategory: 'Bitcoin',
 	images: [{ imageUrl: 'https://example.com/image.png', imageOrder: 0 }],
-	shippings: [{ shipping: { id: 'ship-1', name: 'Standard' }, extraCost: '10' }],
+	shippings: [{ shippingRef: '30406:seller:ship-1', extraCost: '10' }],
 	isDirty: true,
 }
 
@@ -73,7 +73,7 @@ describe('product form session boundaries', () => {
 			name: 'Abandoned product',
 			description: 'should be cleared',
 			activeTab: 'shipping',
-			shippings: [{ shipping: { id: 'ship-2', name: 'Express' }, extraCost: '5' }],
+			shippings: [{ shippingRef: '30406:seller:ship-2', extraCost: '5' }],
 		})
 
 		productFormActions.startCreateProductSession()

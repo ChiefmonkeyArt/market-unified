@@ -14,6 +14,10 @@ import { deriveAuctionChildP2pkPubkeyFromXpub } from '@sdk/commerce/auctions/auc
 import { makeDleqKeyset, makeHonestDleqProof } from '@/lib/cashu/dleqFixture'
 import { getEncodedToken, type MintKeys, type Proof } from '@cashu/cashu-ts'
 
+/** The first four `resolveAuctionWin` parameters, spread into each call below. */
+type ResolveAuctionWinLeadingArgs =
+	Parameters<typeof resolveAuctionWin> extends [infer A, infer B, infer C, infer D, ...unknown[]] ? [A, B, C, D] : never
+
 /**
  * DLEQ keysets covering every proof amount committed by `bids`, keyed
  * `${mint}:${proof.id}`. DLEQ is unconditional, so the win-derivation paths
@@ -404,7 +408,7 @@ describe('auction win path-release resolution', () => {
 			releaseAuction,
 			[first.bid, latestWithStaleLegPlaceholder],
 			[makeConfirmVerdict(latestWithStaleLegPlaceholder)],
-		] as const
+		] as ResolveAuctionWinLeadingArgs
 		const nut7States = new Map([
 			[first.bid.id, 'unspent' as const],
 			[latest.bid.id, 'unspent' as const],
