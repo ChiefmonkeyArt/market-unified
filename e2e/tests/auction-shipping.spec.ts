@@ -24,10 +24,15 @@ test.describe('Auction Shipping Display', () => {
 		await merchantPage.goto(`/auctions/${auctionEvent.id}`)
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('tab', { name: 'Description' }).click()
+		await merchantPage.getByRole('tab', { name: 'Shipping' }).click()
 
-		await expect(merchantPage.getByText('Worldwide Standard')).toBeVisible({ timeout: 15_000 })
-		await expect(merchantPage.getByText('Base:')).toBeVisible()
+		await expect(
+			merchantPage
+				.getByRole('heading', { name: 'Worldwide Standard' })
+				.or(merchantPage.getByText('Worldwide Standard', { exact: true }))
+				.first(),
+		).toBeVisible({ timeout: 15_000 })
+		await expect(merchantPage.getByText(/base price/i).first()).toBeVisible()
 	})
 
 	test('deduplicates shipping refs by shippingRef, first occurrence wins', async ({ merchantPage }) => {
@@ -47,7 +52,7 @@ test.describe('Auction Shipping Display', () => {
 		await merchantPage.goto(`/auctions/${auctionEvent.id}`)
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('tab', { name: 'Description' }).click()
+		await merchantPage.getByRole('tab', { name: 'Shipping' }).click()
 
 		const shippingItems = merchantPage.locator('li').filter({ hasText: 'Digital Delivery' })
 		await expect(shippingItems).toHaveCount(1, { timeout: 15_000 })
@@ -66,7 +71,7 @@ test.describe('Auction Shipping Display', () => {
 		await merchantPage.goto(`/auctions/${auctionEvent.id}`)
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('tab', { name: 'Description' }).click()
+		await merchantPage.getByRole('tab', { name: 'Shipping' }).click()
 
 		await expect(merchantPage.getByText('Shipping option unavailable')).toBeVisible({ timeout: 15_000 })
 	})

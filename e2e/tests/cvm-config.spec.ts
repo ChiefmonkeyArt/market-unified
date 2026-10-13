@@ -24,7 +24,10 @@
  *
  * 1. /api/config endpoint returns a valid cvmServerPubkey (64 hex chars)
  * 2. The cvmServerPubkey is NOT the app's own public key
- * 3. The cvmServerPubkey matches the real ContextVM oracle identity
+ * 3. The cvmServerPubkey matches the oracle key the e2e server is configured
+ *    with (CVM_SERVER_KEY in playwright.config.ts / run-local.sh). The server
+ *    has no built-in production default any more; resolution order is
+ *    unit-tested in src/lib/__tests__/cvm-server-key.test.ts.
  *
  * If the self-detection guard in getCvmServerPublicKey() is removed or
  * bypassed, this E2E test will fail because the Playwright dev server
@@ -37,8 +40,9 @@ import { BASE_URL } from '../test-config'
 import { getPublicKey } from 'nostr-tools/pure'
 import { TEST_APP_PRIVATE_KEY, TEST_APP_PUBLIC_KEY } from '../test-config'
 
-// The real ContextVM oracle pubkey — the production default.
-const CVM_ORACLE_PUBKEY = '29bd6461f780c07b29c89b4df8017db90973d5608a3cd811a0522b15c1064f15'
+// The oracle key the e2e server is started with (see playwright.config.ts).
+const E2E_CVM_SERVER_KEY = 'e2e2222222222222222222222222222222222222222222222222222222222222'
+const CVM_ORACLE_PUBKEY = getPublicKey(Uint8Array.from(Buffer.from(E2E_CVM_SERVER_KEY, 'hex')))
 
 test.describe('CVM oracle configuration', () => {
 	test('/api/config returns cvmServerPubkey that is not the app own key', async ({ request }) => {
@@ -68,10 +72,8 @@ test.describe('CVM oracle configuration', () => {
 		expect(config.cvmServerPubkey).toBe(CVM_ORACLE_PUBKEY)
 	})
 
-	test('/api/config cvmServerPubkey matches the known ContextVM oracle identity', async ({ request }) => {
-		// Additional regression check: the oracle pubkey should be the specific
-		// known value for the ContextVM oracle server at relay.contextvm.org.
-		// If someone accidentally changes the hardcoded default, this test fails.
+	test('/api/config cvmServerPubkey matches the configured ContextVM oracle identity', async ({ request }) => {
+		// The browser must receive exactly the configured oracle identity.
 		const response = await request.get(`${BASE_URL}/api/config`)
 		const config = await response.json()
 

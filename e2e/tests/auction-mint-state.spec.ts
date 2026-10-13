@@ -11,6 +11,21 @@ function unselectedMintLocator(page: import('@playwright/test').Page, mintUrl: s
 	return page.locator('button').filter({ has: page.locator(`span[title="${mintUrl}"]`) })
 }
 
+/**
+ * Opens Create Auction, moves to the Auction tab and opens Advanced. Later
+ * tabs unlock only once the Name tab's required fields are filled.
+ */
+async function openAuctionTab(page: import('@playwright/test').Page) {
+	await page.getByRole('button', { name: /create.*auction/i }).click()
+	await page.getByPlaceholder(/rare print run/i).fill('E2E mint state auction')
+	await page.getByPlaceholder(/describe the item/i).fill('E2E mint state auction description')
+	await page.getByRole('button', { name: /^next$/i }).click()
+	await expect(page.getByRole('tab', { name: /auction/i })).toHaveAttribute('data-state', 'active', { timeout: 10_000 })
+	// Trusted Mints lives in the collapsed Advanced section.
+	await page.getByRole('button', { name: /^advanced$/i }).click()
+	await expect(page.getByText('Trusted Mints')).toBeVisible({ timeout: 5_000 })
+}
+
 test.describe('Auction Mint State', () => {
 	test('trusted mints initialize with available mints', async ({ merchantPage }) => {
 		test.setTimeout(60_000)
@@ -18,9 +33,7 @@ test.describe('Auction Mint State', () => {
 		await merchantPage.goto('/auctions')
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('button', { name: /create.*auction/i }).click()
-
-		await merchantPage.getByRole('tab', { name: 'Auction' }).click()
+		await openAuctionTab(merchantPage)
 
 		for (const mint of DEFAULT_TRUSTED_MINTS) {
 			await expect(merchantPage.locator(`span[title="${mint}"]`)).toBeVisible({ timeout: 10_000 })
@@ -33,9 +46,7 @@ test.describe('Auction Mint State', () => {
 		await merchantPage.goto('/auctions')
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('button', { name: /create.*auction/i }).click()
-
-		await merchantPage.getByRole('tab', { name: 'Auction' }).click()
+		await openAuctionTab(merchantPage)
 
 		const removeButtons = merchantPage.getByTitle('Remove mint')
 		await expect(removeButtons.first()).toBeVisible({ timeout: 10_000 })
@@ -56,9 +67,7 @@ test.describe('Auction Mint State', () => {
 		await merchantPage.goto('/auctions')
 		await merchantPage.waitForLoadState('networkidle')
 
-		await merchantPage.getByRole('button', { name: /create.*auction/i }).click()
-
-		await merchantPage.getByRole('tab', { name: 'Auction' }).click()
+		await openAuctionTab(merchantPage)
 
 		const removeButtons = merchantPage.getByTitle('Remove mint')
 		await expect(removeButtons.first()).toBeVisible({ timeout: 10_000 })

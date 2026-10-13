@@ -413,9 +413,9 @@ test.describe('PII Exposure Remediation Workflow', () => {
 		// Wait for deletion verification to complete
 		await merchantPage.getByRole('paragraph').filter({ hasText: '✓ Success' }).waitFor({ state: 'visible', timeout: 15000 })
 
-		// Verify both events now show "Deletion Verified" status
-		const event1VerifiedStatus = await event1ListItem.locator('div:text("Deletion Verified")').count()
-		const event2VerifiedStatus = await event2ListItem.locator('div:text("Deletion Verified")').count()
+		// Verify both events now show the verified status ("Not returned in verification check")
+		const event1VerifiedStatus = await event1ListItem.locator('div:text("Not returned in verification check")').count()
+		const event2VerifiedStatus = await event2ListItem.locator('div:text("Not returned in verification check")').count()
 		expect(event1VerifiedStatus).toBe(1)
 		expect(event2VerifiedStatus).toBe(1)
 

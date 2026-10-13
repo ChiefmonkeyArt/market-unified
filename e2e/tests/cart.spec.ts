@@ -53,6 +53,16 @@ function cartDialog(page: Page) {
 	return page.getByRole('dialog', { name: /your cart/i })
 }
 
+/**
+ * Adding is async (the store fetches the product event and shipping options
+ * before saving), so wait for the header cart badge before reloading or
+ * navigating away; otherwise the reload interrupts the add.
+ */
+async function expectCartBadge(page: Page, count: number): Promise<void> {
+	const cartButton = page.getByRole('button').filter({ has: page.locator('.i-basket') })
+	await expect(cartButton).toContainText(String(count), { timeout: 15_000 })
+}
+
 /** Add the "Bitcoin Hardware Wallet" (devUser1) to the cart from the /products page. */
 async function addWalletToCart(page: Page): Promise<void> {
 	const wallet = page.locator('[data-testid="product-card"]').filter({ hasText: 'Bitcoin Hardware Wallet' })
@@ -336,6 +346,7 @@ test.describe('Cart - Persistence', () => {
 
 		// Add another product from a different seller
 		await addGuideToCart(newUserPage)
+		await expectCartBadge(newUserPage, 2)
 
 		// Reload the page
 		await newUserPage.reload()
@@ -385,6 +396,7 @@ test.describe('Cart - Persistence', () => {
 		await safeGoto(newUserPage, '/products')
 		await waitForProducts(newUserPage)
 		await addWalletToCart(newUserPage)
+		await expectCartBadge(newUserPage, 1)
 
 		// Navigate away to a different page
 		await safeGoto(newUserPage, '/')
